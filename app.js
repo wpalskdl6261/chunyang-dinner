@@ -200,7 +200,7 @@ function analyzeMeal(meal) {
   if (flags.fried) tags.push({ text: "기름진 메뉴", tone: "warn" });
   if (!tags.length) tags.push({ text: "무난한 구성", tone: "" });
 
-  const title = score >= 84 ? "균형 좋은 점심" : score >= 72 ? "저녁으로 균형 맞추기" : "저녁은 가볍게";
+  const title = score >= 84 ? "점심 참 잘했어요" : score >= 72 ? "저녁으로 별점 채우기" : "저녁은 쉬는 시간처럼";
   const copy = makeBalanceCopy(flags, calories);
 
   return { flags, score, tags, title, copy };
@@ -208,18 +208,18 @@ function analyzeMeal(meal) {
 
 function makeBalanceCopy(flags, calories) {
   if (calories >= 700 && flags.meat) {
-    return "점심이 보양식처럼 든든해서 저녁은 채소와 담백한 단백질 쪽이 잘 맞아요.";
+    return "점심이 아주 든든했으니 저녁은 채소와 담백한 단백질을 짝꿍으로 붙여봐요.";
   }
   if (flags.fried || flags.sweet) {
-    return "기름기나 단맛이 있는 날이라 저녁은 맑은 국, 두부, 생선, 나물 쪽이 좋아요.";
+    return "기름기나 달콤한 후식이 있던 날이라 저녁은 맑은 국, 두부, 생선, 나물이 좋아요.";
   }
   if (flags.spicy) {
-    return "양념이 강한 편이라 저녁은 덜 맵고 속 편한 메뉴로 잡으면 좋아요.";
+    return "양념이 매운 편이라 저녁은 덜 맵고 속 편한 메뉴로 골라봐요.";
   }
   if (flags.veggie) {
-    return "채소가 어느 정도 있어서 저녁은 단백질만 깔끔하게 보강해도 좋아요.";
+    return "채소 칭찬 도장을 받았어요. 저녁은 단백질만 깔끔하게 더해도 좋아요.";
   }
-  return "특별히 치우친 점심은 아니라 취향에 맞춰 무겁지 않게 고르면 좋아요.";
+  return "크게 치우친 점심은 아니라 취향에 맞춰 무겁지 않게 고르면 좋아요.";
 }
 
 function renderMeal(meal) {
@@ -244,8 +244,8 @@ function resetMealUi() {
   elements.protein.textContent = "-";
   elements.fat.textContent = "-";
   elements.balanceScore.textContent = "-";
-  elements.balanceTitle.textContent = "메뉴를 기다리는 중";
-  elements.balanceCopy.textContent = "점심 메뉴가 들어오면 저녁 방향을 잡아줘요.";
+  elements.balanceTitle.textContent = "급식표 기다리는 중";
+  elements.balanceCopy.textContent = "점심 메뉴가 들어오면 저녁 숙제 방향을 잡아줘요.";
   elements.analysisTags.innerHTML = "";
   elements.recommendations.innerHTML = "";
 }
@@ -265,7 +265,7 @@ async function loadMeal() {
   state.meal = null;
   state.analysis = null;
   resetMealUi();
-  setStatus("급식을 불러오는 중");
+  setStatus("급식표 붙이는 중");
   elements.loadButton.disabled = true;
   updateQuota();
 
@@ -276,7 +276,7 @@ async function loadMeal() {
     const row = data.mealServiceDietInfo?.[1]?.row?.[0];
 
     if (!row) {
-      setStatus("등록된 중식 정보가 없어요.", true);
+      setStatus("오늘은 붙어 있는 점심표가 없어요.", true);
       return;
     }
 
@@ -290,11 +290,11 @@ async function loadMeal() {
 
     state.meal = meal;
     state.analysis = analyzeMeal(meal);
-    setStatus(`${SCHOOL.name} ${row.MMEAL_SC_NM} ${meal.items.length}개 메뉴`);
+    setStatus(`${SCHOOL.name} ${row.MMEAL_SC_NM} 메뉴 ${meal.items.length}개 도착`);
     renderMeal(meal);
     renderAnalysis(state.analysis);
   } catch (error) {
-    setStatus("급식 정보를 불러오지 못했어요.", true);
+    setStatus("급식표를 못 가져왔어요.", true);
   } finally {
     elements.loadButton.disabled = false;
     updateQuota();
