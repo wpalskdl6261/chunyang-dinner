@@ -7,7 +7,7 @@ const SCHOOL = {
 const DAILY_LIMIT = 2;
 const state = {
   meal: null,
-  analysis: null,
+  note: null,
   preference: "balanced",
 };
 
@@ -20,7 +20,6 @@ const elements = {
   calories: document.querySelector("#calories"),
   protein: document.querySelector("#protein"),
   fat: document.querySelector("#fat"),
-  balanceScore: document.querySelector("#balanceScore"),
   balanceTitle: document.querySelector("#balanceTitle"),
   balanceCopy: document.querySelector("#balanceCopy"),
   analysisTags: document.querySelector("#analysisTags"),
@@ -47,66 +46,66 @@ const keywordSets = {
 const dinnerPool = [
   {
     title: "두부버섯덮밥 + 오이무침",
-    tags: ["담백", "식물성 단백질", "속 편함"],
+    tags: ["담백", "부드러운 식감", "한 그릇"],
     avoids: [],
     prefs: ["balanced", "light", "veggie"],
-    reason: "점심이 든든한 날에도 부담이 적고, 버섯과 두부로 단백질과 식감을 같이 채울 수 있어요.",
+    reason: "버섯 향과 두부의 부드러움이 저녁을 차분하게 정리해줘요.",
   },
   {
     title: "고등어구이 + 잡곡밥 + 시금치나물",
-    tags: ["오메가3", "채소 보충", "한식"],
+    tags: ["한식", "고소함", "따뜻한 밥상"],
     avoids: ["seafood"],
     prefs: ["balanced", "hearty"],
-    reason: "육류 위주의 점심 뒤에 생선과 나물로 방향을 바꾸면 영양 균형이 좋아져요.",
+    reason: "구운 생선과 나물 조합은 집밥 느낌이 선명해서 하루 끝에 잘 어울려요.",
   },
   {
     title: "계란찜 + 애호박볶음 + 맑은 미역국",
-    tags: ["부드러움", "가볍게", "저자극"],
+    tags: ["부드러움", "편안함", "맑은 국"],
     avoids: [],
     prefs: ["light", "balanced"],
-    reason: "간이 세거나 후식이 있는 점심 뒤에 무난하게 먹기 좋은 조합이에요.",
+    reason: "간단하고 부드러운 맛이라 편안한 저녁을 만들기 좋아요.",
   },
   {
     title: "버섯콩나물밥 + 양념장 조금",
-    tags: ["채소", "향긋함", "과식 방지"],
+    tags: ["향긋함", "채소", "가벼운 한 그릇"],
     avoids: [],
     prefs: ["veggie", "light", "balanced"],
-    reason: "밥은 챙기되 콩나물과 버섯 비중을 높여 저녁이 무겁지 않게 잡혀요.",
+    reason: "콩나물 식감과 버섯 향이 살아 있어서 부담 없이 먹기 좋은 한 그릇이에요.",
   },
   {
     title: "소고기무국 + 잡곡밥 + 김구이",
     tags: ["든든함", "맑은 국", "한식"],
     avoids: ["beef"],
     prefs: ["hearty", "balanced"],
-    reason: "활동량이 많은 날에 좋고, 매운 양념 없이 따뜻하게 마무리하기 좋아요.",
+    reason: "따뜻한 국물과 밥이 중심이라 활동 많은 날에도 안정감 있게 마무리돼요.",
   },
   {
     title: "채소 샤브샤브 + 칼국수 조금",
-    tags: ["채소 듬뿍", "따뜻함", "조절 쉬움"],
+    tags: ["따뜻함", "선택 쉬움", "채소"],
     avoids: [],
     prefs: ["veggie", "hearty", "balanced"],
-    reason: "점심에 부족했던 채소를 크게 보충하면서 양을 조절하기 쉬운 메뉴예요.",
+    reason: "익힌 채소와 국물이 중심이라 가족끼리 천천히 먹기 좋아요.",
   },
   {
     title: "참치김치볶음밥 + 달걀후라이",
-    tags: ["간단", "단백질", "집밥"],
+    tags: ["빠른 준비", "집밥", "고소함"],
     avoids: ["seafood"],
     prefs: ["hearty"],
-    reason: "저녁 준비 시간이 짧을 때 좋고, 달걀을 더하면 포만감이 안정적으로 올라가요.",
+    reason: "준비가 빠르고 맛의 방향이 또렷해서 바쁜 저녁에 잘 맞아요.",
   },
   {
     title: "들깨수제비 + 부추겉절이",
-    tags: ["고소함", "따뜻함", "든든함"],
+    tags: ["고소함", "따뜻함", "포근함"],
     avoids: [],
     prefs: ["hearty"],
-    reason: "몸이 허한 날에 좋지만, 점심 열량이 높았다면 수제비 양을 조금 줄이면 좋아요.",
+    reason: "들깨 국물이 포근해서 날씨가 선선하거나 따뜻한 메뉴가 끌릴 때 좋아요.",
   },
   {
     title: "비빔밥 + 고추장 적게",
-    tags: ["채소", "색감", "균형"],
+    tags: ["색감", "한 그릇", "깔끔함"],
     avoids: [],
     prefs: ["veggie", "balanced"],
-    reason: "여러 채소를 한 번에 먹기 좋고, 양념만 조절하면 깔끔한 저녁이 돼요.",
+    reason: "여러 재료를 한 그릇에 담아 보기 좋고, 양념을 부드럽게 맞추기 쉬워요.",
   },
 ];
 
@@ -121,7 +120,7 @@ function dateToYmd(dateValue) {
 }
 
 function usageKey() {
-  return `chunyang-dinner-usage:v1:${todayIso()}`;
+  return `chunyang-dinner-usage:v3:${todayIso()}`;
 }
 
 function getUsage() {
@@ -175,79 +174,74 @@ function hasAny(text, words) {
   return words.some((word) => text.includes(word));
 }
 
-function analyzeMeal(meal) {
+function describeMeal(meal) {
   const joined = meal.items.join(" ");
-  const calories = Number.parseFloat(meal.calories);
   const flags = Object.fromEntries(
     Object.entries(keywordSets).map(([key, words]) => [key, hasAny(joined, words)]),
   );
 
-  let score = 82;
-  if (calories >= 700) score -= 9;
-  if (flags.fried) score -= 11;
-  if (flags.sweet) score -= 6;
-  if (flags.veggie) score += 6;
-  if (flags.seafood) score += 3;
-  if (flags.meat) score += 2;
-  score = Math.max(56, Math.min(96, score));
-
   const tags = [];
-  if (calories >= 700) tags.push({ text: "든든한 열량", tone: "warn" });
-  if (flags.meat) tags.push({ text: "단백질 충분", tone: "cool" });
-  if (flags.soup) tags.push({ text: "국물 메뉴", tone: "cool" });
-  if (flags.sweet) tags.push({ text: "달콤한 후식", tone: "warn" });
-  if (flags.veggie) tags.push({ text: "채소 요소 있음", tone: "" });
-  if (flags.fried) tags.push({ text: "기름진 메뉴", tone: "warn" });
-  if (!tags.length) tags.push({ text: "무난한 구성", tone: "" });
+  if (flags.soup) tags.push({ text: "따뜻한 국물", tone: "cool" });
+  if (flags.meat) tags.push({ text: "든든한 메인", tone: "warm" });
+  if (flags.seafood) tags.push({ text: "해산물", tone: "cool" });
+  if (flags.spicy) tags.push({ text: "매콤한 양념", tone: "accent" });
+  if (flags.fried) tags.push({ text: "바삭한 메뉴", tone: "warm" });
+  if (flags.sweet) tags.push({ text: "달콤한 마무리", tone: "accent" });
+  if (flags.veggie) tags.push({ text: "채소 반찬", tone: "" });
+  if (!tags.length) tags.push({ text: "오늘의 메뉴", tone: "" });
 
-  const title = score >= 84 ? "균형 좋은 점심" : score >= 72 ? "저녁으로 균형 맞추기" : "저녁은 가볍게";
-  const copy = makeBalanceCopy(flags, calories);
+  let title = "편안한 흐름의 점심이에요";
+  if (flags.soup && flags.meat) title = "따뜻하고 든든한 점심이에요";
+  else if (flags.spicy) title = "매콤한 포인트가 있는 점심이에요";
+  else if (flags.seafood) title = "바다 재료가 들어간 점심이에요";
+  else if (flags.sweet) title = "달콤한 마무리가 있는 점심이에요";
+  else if (flags.veggie) title = "산뜻한 반찬이 보이는 점심이에요";
 
-  return { flags, score, tags, title, copy };
-}
-
-function makeBalanceCopy(flags, calories) {
-  if (calories >= 700 && flags.meat) {
-    return "점심이 보양식처럼 든든해서 저녁은 채소와 담백한 단백질 쪽이 잘 맞아요.";
-  }
-  if (flags.fried || flags.sweet) {
-    return "기름기나 단맛이 있는 날이라 저녁은 맑은 국, 두부, 생선, 나물 쪽이 좋아요.";
-  }
-  if (flags.spicy) {
-    return "양념이 강한 편이라 저녁은 덜 맵고 속 편한 메뉴로 잡으면 좋아요.";
-  }
-  if (flags.veggie) {
-    return "채소가 어느 정도 있어서 저녁은 단백질만 깔끔하게 보강해도 좋아요.";
-  }
-  return "특별히 치우친 점심은 아니라 취향에 맞춰 무겁지 않게 고르면 좋아요.";
+  return {
+    flags,
+    tags,
+    title,
+    copy: `${meal.items.length}개 메뉴가 확인됐어요. 저녁은 선택한 취향에 맞춰 자연스럽게 이어볼게요.`,
+  };
 }
 
 function renderMeal(meal) {
-  elements.mealList.innerHTML = meal.items.map((item) => `<li>${item}</li>`).join("");
+  const fragment = document.createDocumentFragment();
+  meal.items.forEach((item) => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    fragment.append(li);
+  });
+
+  elements.mealList.replaceChildren(fragment);
   elements.calories.textContent = meal.calories || "-";
   elements.protein.textContent = meal.nutrition["단백질(g)"] || "-";
   elements.fat.textContent = meal.nutrition["지방(g)"] || "-";
 }
 
-function renderAnalysis(analysis) {
-  elements.balanceScore.textContent = analysis.score;
-  elements.balanceTitle.textContent = analysis.title;
-  elements.balanceCopy.textContent = analysis.copy;
-  elements.analysisTags.innerHTML = analysis.tags
-    .map((tag) => `<span class="tag ${tag.tone}">${tag.text}</span>`)
-    .join("");
+function renderNote(note) {
+  elements.balanceTitle.textContent = note.title;
+  elements.balanceCopy.textContent = note.copy;
+
+  const fragment = document.createDocumentFragment();
+  note.tags.forEach((tag) => {
+    const badge = document.createElement("span");
+    badge.className = `tag ${tag.tone}`.trim();
+    badge.textContent = tag.text;
+    fragment.append(badge);
+  });
+  elements.analysisTags.replaceChildren(fragment);
 }
 
 function resetMealUi() {
-  elements.mealList.innerHTML = "";
+  elements.mealList.replaceChildren();
   elements.calories.textContent = "-";
   elements.protein.textContent = "-";
   elements.fat.textContent = "-";
-  elements.balanceScore.textContent = "-";
   elements.balanceTitle.textContent = "메뉴를 기다리는 중";
-  elements.balanceCopy.textContent = "점심 메뉴가 들어오면 저녁 방향을 잡아줘요.";
-  elements.analysisTags.innerHTML = "";
-  elements.recommendations.innerHTML = "";
+  elements.balanceCopy.textContent = "점심 메뉴가 들어오면 저녁 추천을 준비할게요.";
+  elements.analysisTags.replaceChildren();
+  elements.recommendations.replaceChildren();
 }
 
 async function loadMeal() {
@@ -263,7 +257,7 @@ async function loadMeal() {
   });
 
   state.meal = null;
-  state.analysis = null;
+  state.note = null;
   resetMealUi();
   setStatus("급식을 불러오는 중");
   elements.loadButton.disabled = true;
@@ -289,10 +283,10 @@ async function loadMeal() {
     };
 
     state.meal = meal;
-    state.analysis = analyzeMeal(meal);
+    state.note = describeMeal(meal);
     setStatus(`${SCHOOL.name} ${row.MMEAL_SC_NM} ${meal.items.length}개 메뉴`);
     renderMeal(meal);
-    renderAnalysis(state.analysis);
+    renderNote(state.note);
   } catch (error) {
     setStatus("급식 정보를 불러오지 못했어요.", true);
   } finally {
@@ -302,40 +296,54 @@ async function loadMeal() {
   }
 }
 
-function recommendationRank(item, analysis) {
-  let score = item.prefs.includes(state.preference) ? 16 : 0;
-  if (state.preference === "balanced" && item.prefs.includes("balanced")) score += 6;
-  if (analysis.flags.fried || analysis.flags.sweet || Number.parseFloat(state.meal.calories) >= 700) {
-    if (item.prefs.includes("light") || item.prefs.includes("veggie")) score += 10;
-  }
-  if (analysis.flags.chicken && item.avoids.includes("chicken")) score -= 24;
-  if (analysis.flags.pork && item.avoids.includes("pork")) score -= 24;
-  if (analysis.flags.beef && item.avoids.includes("beef")) score -= 24;
-  if (analysis.flags.seafood && item.avoids.includes("seafood")) score -= 18;
-  return score + item.title.length / 100;
+function recommendationRank(item, note) {
+  let rank = item.prefs.includes(state.preference) ? 16 : 0;
+  const calories = Number.parseFloat(state.meal.calories);
+
+  if (state.preference === "balanced" && item.prefs.includes("balanced")) rank += 6;
+  if ((note.flags.fried || note.flags.sweet || calories >= 700) && item.prefs.includes("light")) rank += 8;
+  if (note.flags.spicy && item.prefs.includes("light")) rank += 5;
+  if (note.flags.chicken && item.avoids.includes("chicken")) rank -= 24;
+  if (note.flags.pork && item.avoids.includes("pork")) rank -= 24;
+  if (note.flags.beef && item.avoids.includes("beef")) rank -= 24;
+  if (note.flags.seafood && item.avoids.includes("seafood")) rank -= 18;
+
+  return rank + item.title.length / 100;
 }
 
 function buildRecommendations() {
-  if (!state.meal || !state.analysis) return [];
+  if (!state.meal || !state.note) return [];
   return [...dinnerPool]
-    .sort((a, b) => recommendationRank(b, state.analysis) - recommendationRank(a, state.analysis))
+    .sort((a, b) => recommendationRank(b, state.note) - recommendationRank(a, state.note))
     .slice(0, 3);
 }
 
 function renderRecommendations(items) {
-  elements.recommendations.innerHTML = items
-    .map(
-      (item) => `
-        <article class="recommendation">
-          <h3>${item.title}</h3>
-          <p>${item.reason}</p>
-          <div class="mini-tags">
-            ${item.tags.map((tag) => `<span>${tag}</span>`).join("")}
-          </div>
-        </article>
-      `,
-    )
-    .join("");
+  const fragment = document.createDocumentFragment();
+
+  items.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "recommendation";
+
+    const title = document.createElement("h3");
+    title.textContent = item.title;
+
+    const reason = document.createElement("p");
+    reason.textContent = item.reason;
+
+    const tags = document.createElement("div");
+    tags.className = "mini-tags";
+    item.tags.forEach((tag) => {
+      const badge = document.createElement("span");
+      badge.textContent = tag;
+      tags.append(badge);
+    });
+
+    card.append(title, reason, tags);
+    fragment.append(card);
+  });
+
+  elements.recommendations.replaceChildren(fragment);
 }
 
 function recommendDinner() {

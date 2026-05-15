@@ -10,16 +10,17 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="topbar" aria-labelledby="app-title">
-        <div>
+      <header class="topbar" aria-labelledby="app-title">
+        <div class="title-block">
           <p class="eyebrow">봉화 춘양초등학교</p>
-          <h1 id="app-title">점심 보고 저녁 고르기</h1>
+          <h1 id="app-title">오늘 저녁, 자연스럽게</h1>
+          <p class="lead">점심 메뉴의 흐름을 보고 취향에 맞는 저녁을 골라요.</p>
         </div>
         <div class="quota-pill" aria-live="polite">
           <span>오늘 남은 추천</span>
           <strong id="quotaCount">2회</strong>
         </div>
-      </section>
+      </header>
 
       <section class="control-strip" aria-label="급식 조회">
         <label class="date-field">
@@ -65,25 +66,20 @@
           </div>
         </article>
 
-        <article class="tool-panel analysis-panel" aria-labelledby="analysis-title">
+        <article class="tool-panel note-panel" aria-labelledby="analysis-title">
           <div class="panel-heading">
             <div>
-              <p class="section-label">Balance</p>
-              <h2 id="analysis-title">점심 분석</h2>
+              <p class="section-label">Lunch Note</p>
+              <h2 id="analysis-title">점심 메모</h2>
             </div>
           </div>
 
-          <div class="score-wrap" aria-label="균형 점수">
-            <div class="score-ring">
-              <span id="balanceScore">-</span>
-            </div>
-            <div>
-              <strong id="balanceTitle">메뉴를 기다리는 중</strong>
-              <p id="balanceCopy">점심 메뉴가 들어오면 저녁 방향을 잡아줘요.</p>
-            </div>
+          <div class="note-copy" aria-live="polite">
+            <strong id="balanceTitle">메뉴를 기다리는 중</strong>
+            <p id="balanceCopy">점심 메뉴가 들어오면 저녁 추천을 준비할게요.</p>
           </div>
 
-          <div id="analysisTags" class="tag-row" aria-label="점심 특징"></div>
+          <div id="analysisTags" class="tag-row" aria-label="점심 키워드"></div>
         </article>
       </section>
 
@@ -95,10 +91,10 @@
           </div>
 
           <div class="preference-group" aria-label="추천 취향">
-            <button class="pref-button active" type="button" data-pref="balanced">균형</button>
-            <button class="pref-button" type="button" data-pref="light">가볍게</button>
+            <button class="pref-button active" type="button" data-pref="balanced">고르게</button>
+            <button class="pref-button" type="button" data-pref="light">산뜻하게</button>
             <button class="pref-button" type="button" data-pref="hearty">든든하게</button>
-            <button class="pref-button" type="button" data-pref="veggie">채소</button>
+            <button class="pref-button" type="button" data-pref="veggie">채소 중심</button>
           </div>
         </div>
 
@@ -108,7 +104,7 @@
         </button>
 
         <div id="lockMessage" class="lock-message" hidden>
-          오늘 추천 횟수를 모두 사용했어요.
+          오늘 추천은 여기까지예요.
         </div>
 
         <div id="recommendations" class="recommendation-list" aria-live="polite"></div>
