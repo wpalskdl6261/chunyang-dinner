@@ -37,10 +37,10 @@ const keywordSets = {
   chicken: ["닭", "치킨", "삼계탕"],
   pork: ["돼지", "돈육", "베이컨", "햄", "소시지"],
   beef: ["소고기", "쇠고기", "한우", "불고기"],
-  seafood: ["고등어", "오징어", "새우", "꽃게", "참치", "멸치", "조개", "연어"],
-  sweet: ["케이크", "초코", "푸딩", "요거트", "아이스", "젤리", "주스"],
-  veggie: ["나물", "샐러드", "채소", "묵", "오이", "브로콜리", "양배추", "버섯", "시금치"],
-  soup: ["국", "탕", "찌개", "스프"],
+  seafood: ["고등어", "오징어", "새우", "꽃게", "참치", "멸치", "조개", "연어", "생선"],
+  sweet: ["케이크", "초코", "푸딩", "요거트", "아이스", "젤리", "주스", "과일", "사과", "배"],
+  veggie: ["나물", "샐러드", "채소", "묵", "오이", "브로콜리", "양배추", "버섯", "시금치", "김치"],
+  soup: ["국", "탕", "찌개", "스프", "수제비"],
 };
 
 const dinnerPool = [
@@ -84,7 +84,7 @@ const dinnerPool = [
     tags: ["따뜻함", "선택 쉬움", "채소"],
     avoids: [],
     prefs: ["veggie", "hearty", "balanced"],
-    reason: "익힌 채소와 국물이 중심이라 가족끼리 천천히 먹기 좋아요.",
+    reason: "익힌 채소와 국물이 중심이라 천천히 먹기 좋아요.",
   },
   {
     title: "참치김치볶음밥 + 달걀후라이",
@@ -120,7 +120,7 @@ function dateToYmd(dateValue) {
 }
 
 function usageKey() {
-  return `chunyang-dinner-usage:v3:${todayIso()}`;
+  return `chunyang-dinner-usage:v4:${todayIso()}`;
 }
 
 function getUsage() {
@@ -135,7 +135,7 @@ function setUsage(nextValue) {
 
 function updateQuota() {
   const remaining = Math.max(DAILY_LIMIT - getUsage(), 0);
-  elements.quotaCount.textContent = `${remaining}회`;
+  elements.quotaCount.textContent = `${remaining}번`;
   elements.recommendButton.disabled = remaining <= 0 || !state.meal;
   elements.lockMessage.hidden = remaining > 0;
 }
@@ -182,26 +182,60 @@ function describeMeal(meal) {
 
   const tags = [];
   if (flags.soup) tags.push({ text: "따뜻한 국물", tone: "cool" });
-  if (flags.meat) tags.push({ text: "든든한 메인", tone: "warm" });
-  if (flags.seafood) tags.push({ text: "해산물", tone: "cool" });
-  if (flags.spicy) tags.push({ text: "매콤한 양념", tone: "accent" });
-  if (flags.fried) tags.push({ text: "바삭한 메뉴", tone: "warm" });
-  if (flags.sweet) tags.push({ text: "달콤한 마무리", tone: "accent" });
-  if (flags.veggie) tags.push({ text: "채소 반찬", tone: "" });
-  if (!tags.length) tags.push({ text: "오늘의 메뉴", tone: "" });
+  if (flags.meat) tags.push({ text: "든든한 고기", tone: "warm" });
+  if (flags.seafood) tags.push({ text: "바다 영양", tone: "cool" });
+  if (flags.spicy) tags.push({ text: "매콤달콤", tone: "accent" });
+  if (flags.fried) tags.push({ text: "바삭바삭", tone: "warm" });
+  if (flags.sweet) tags.push({ text: "달콤한 후식", tone: "accent" });
+  if (flags.veggie) tags.push({ text: "싱싱 채소", tone: "green" });
+  if (!tags.length) tags.push({ text: "맛있는 점심", tone: "" });
 
-  let title = "편안한 흐름의 점심이에요";
-  if (flags.soup && flags.meat) title = "따뜻하고 든든한 점심이에요";
-  else if (flags.spicy) title = "매콤한 포인트가 있는 점심이에요";
-  else if (flags.seafood) title = "바다 재료가 들어간 점심이에요";
-  else if (flags.sweet) title = "달콤한 마무리가 있는 점심이에요";
-  else if (flags.veggie) title = "산뜻한 반찬이 보이는 점심이에요";
+  let title = "우와! 맛있고 건강한 점심이에요 😋";
+  if (flags.soup && flags.meat) title = "따뜻하고 든든한 최고 점심이에요!";
+  else if (flags.spicy) title = "매콤달콤 입맛을 확 살려주는 점심이에요!";
+  else if (flags.seafood) title = "바다의 영양소가 듬뿍 담긴 점심이에요!";
+  else if (flags.sweet) title = "달콤한 후식이 기다리는 행복한 점심이에요!";
+  else if (flags.veggie) title = "비타민이 가득! 몸이 튼튼해지는 점심이에요!";
+
+  // 메뉴의 장점 설명 생성
+  const benefits = [];
+  if (flags.meat || flags.chicken || flags.pork || flags.beef) {
+    benefits.push("고기 반찬은 쑥쑥 크는 우리 친구들에게 든든한 호랑이 기운을 줘요 🐯");
+  }
+  if (flags.veggie) {
+    benefits.push("싱싱한 채소에는 비타민이 가득해서 나쁜 감기균도 으쌰으쌰 이겨낼 수 있어요 🥦");
+  }
+  if (flags.soup) {
+    benefits.push("따뜻한 국물은 뱃속을 부드럽게 쓰다듬어 주어 소화가 아주 잘 되게 도와준답니다 🥣");
+  }
+  if (flags.seafood) {
+    benefits.push("해산물에는 머리를 똑똑하게 해주는 마법의 영양소가 듬뿍 들어있어요 🐟");
+  }
+  if (flags.sweet) {
+    benefits.push("달콤한 후식 덕분에 기분이 날아갈 듯 좋아져서 오후 수업도 즐거울 거예요 🍎");
+  }
+  if (flags.fried) {
+    benefits.push("바삭바삭 씹는 재미가 있어서 밥투정하는 날에도 밥 한 그릇을 뚝딱 비우게 해줘요 🍤");
+  }
+  if (flags.spicy) {
+    benefits.push("살짝 매콤달콤한 맛이 학교 생활의 스트레스를 휙 날려버려 줄 거예요 🌶️");
+  }
+
+  let benefitText = "";
+  if (benefits.length > 0) {
+    // 너무 길어지지 않게 최대 2개 장점만 연결
+    benefitText = benefits.slice(0, 2).join(" 그리고 ");
+  } else {
+    benefitText = "영양 선생님이 골고루 챙겨주신 멋진 식단이라 쑥쑥 자라는 데 최고랍니다!";
+  }
+
+  const copy = `${benefitText} 정말 훌륭하죠? 겹치지 않게 맛있는 저녁을 골라줄게요!`;
 
   return {
     flags,
     tags,
     title,
-    copy: `${meal.items.length}개 메뉴가 확인됐어요. 저녁은 선택한 취향에 맞춰 자연스럽게 이어볼게요.`,
+    copy,
   };
 }
 
@@ -238,8 +272,8 @@ function resetMealUi() {
   elements.calories.textContent = "-";
   elements.protein.textContent = "-";
   elements.fat.textContent = "-";
-  elements.balanceTitle.textContent = "메뉴를 기다리는 중";
-  elements.balanceCopy.textContent = "점심 메뉴가 들어오면 저녁 추천을 준비할게요.";
+  elements.balanceTitle.textContent = "어떤 반찬이 나올까요? 🧐";
+  elements.balanceCopy.textContent = "날짜를 고르면 맛있는 점심 메뉴와 추천 저녁을 보여줄게요!";
   elements.analysisTags.replaceChildren();
   elements.recommendations.replaceChildren();
 }
@@ -259,7 +293,7 @@ async function loadMeal() {
   state.meal = null;
   state.note = null;
   resetMealUi();
-  setStatus("급식을 불러오는 중");
+  setStatus("영양 선생님의 식단을 가져오는 중이에요! 🏃‍♂️");
   elements.loadButton.disabled = true;
   updateQuota();
 
@@ -270,7 +304,7 @@ async function loadMeal() {
     const row = data.mealServiceDietInfo?.[1]?.row?.[0];
 
     if (!row) {
-      setStatus("등록된 중식 정보가 없어요.", true);
+      setStatus("앗! 이 날은 점심 정보가 없어요 😢", true);
       return;
     }
 
@@ -284,11 +318,11 @@ async function loadMeal() {
 
     state.meal = meal;
     state.note = describeMeal(meal);
-    setStatus(`${SCHOOL.name} ${row.MMEAL_SC_NM} ${meal.items.length}개 메뉴`);
+    setStatus(`${SCHOOL.name} ${row.MMEAL_SC_NM} 완성! ✨`);
     renderMeal(meal);
     renderNote(state.note);
   } catch (error) {
-    setStatus("급식 정보를 불러오지 못했어요.", true);
+    setStatus("인터넷 연결이 조금 불안한가 봐요 😭", true);
   } finally {
     elements.loadButton.disabled = false;
     updateQuota();

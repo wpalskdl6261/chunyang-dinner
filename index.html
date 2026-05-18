@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>점심 기반 저메추</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="./app.js" defer></script>
@@ -12,28 +15,28 @@
     <main class="app-shell">
       <header class="topbar" aria-labelledby="app-title">
         <div class="title-block">
-          <p class="eyebrow">봉화 춘양초등학교</p>
+          <p class="eyebrow">🏫 봉화 춘양초등학교</p>
           <h1 id="app-title">점심 기반 저메추</h1>
-          <p class="lead">점심 메뉴를 바탕으로 겹치지 않는 저녁 후보를 깔끔하게 추려요.</p>
+          <p class="lead">학교 점심을 바탕으로 겹치지 않는 맛있는 저녁을 골라봐요!</p>
         </div>
         <div class="quota-pill" aria-live="polite">
           <span>오늘 남은 추천</span>
-          <strong id="quotaCount">2회</strong>
+          <strong id="quotaCount">2번</strong>
         </div>
       </header>
 
       <section class="control-strip" aria-label="급식 조회">
         <label class="date-field">
-          <span>날짜</span>
+          <span>📅 날짜</span>
           <input id="mealDate" type="date" />
         </label>
         <button id="todayButton" class="icon-button secondary" type="button">
-          <i data-lucide="calendar" aria-hidden="true"></i>
+          <i data-lucide="sun" aria-hidden="true"></i>
           <span>오늘</span>
         </button>
         <button id="loadButton" class="icon-button primary" type="button">
-          <i data-lucide="rotate-cw" aria-hidden="true"></i>
-          <span>불러오기</span>
+          <i data-lucide="utensils" aria-hidden="true"></i>
+          <span>메뉴 보기</span>
         </button>
       </section>
 
@@ -41,10 +44,10 @@
         <article class="tool-panel lunch-panel" aria-labelledby="lunch-title">
           <div class="panel-heading">
             <div>
-              <p class="section-label">Lunch</p>
+              <p class="section-label">🍱 Lunch</p>
               <h2 id="lunch-title">오늘 점심</h2>
             </div>
-            <span id="sourceBadge" class="source-badge">NEIS</span>
+            <span id="sourceBadge" class="source-badge">나이스(NEIS)</span>
           </div>
 
           <div id="mealStatus" class="status-line" role="status">급식을 불러오는 중</div>
@@ -69,7 +72,7 @@
         <article class="tool-panel note-panel" aria-labelledby="analysis-title">
           <div class="panel-heading">
             <div>
-              <p class="section-label">Lunch Note</p>
+              <p class="section-label">📝 Lunch Note</p>
               <h2 id="analysis-title">점심 메모</h2>
             </div>
           </div>
@@ -86,25 +89,25 @@
       <section class="recommend-section" aria-labelledby="recommend-title">
         <div class="recommend-head">
           <div>
-            <p class="section-label">Dinner</p>
+            <p class="section-label">🍽️ Dinner</p>
             <h2 id="recommend-title">저녁 메뉴 추천</h2>
           </div>
 
           <div class="preference-group" aria-label="추천 취향">
-            <button class="pref-button active" type="button" data-pref="balanced">고르게</button>
+            <button class="pref-button active" type="button" data-pref="balanced">골고루</button>
             <button class="pref-button" type="button" data-pref="light">산뜻하게</button>
             <button class="pref-button" type="button" data-pref="hearty">든든하게</button>
-            <button class="pref-button" type="button" data-pref="veggie">채소 중심</button>
+            <button class="pref-button" type="button" data-pref="veggie">채소 듬뿍</button>
           </div>
         </div>
 
         <button id="recommendButton" class="icon-button recommend-button" type="button">
-          <i data-lucide="sparkles" aria-hidden="true"></i>
-          <span>저녁 추천 받기</span>
+          <i data-lucide="star" aria-hidden="true"></i>
+          <span>맛있는 저녁 추천 받기!</span>
         </button>
 
         <div id="lockMessage" class="lock-message" hidden>
-          오늘 추천은 여기까지예요.
+          오늘의 추천은 여기까지예요! 내일 또 만나요 👋
         </div>
 
         <div id="recommendations" class="recommendation-list" aria-live="polite"></div>
