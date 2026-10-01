@@ -793,6 +793,9 @@ function bindEvents() {
 }
 
 function init() {
+  // 지은쌤 추천 서버를 연결하기 전에는 직접 입력 칸과 남은 횟수를 숨겨요
+  document.querySelector("#customSection").hidden = !AI_ENDPOINT;
+  document.querySelector("#quotaPill").hidden = !AI_ENDPOINT;
   bindEvents();
   updateQuota();
   selectDate(todayIso());
