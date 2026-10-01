@@ -4,6 +4,11 @@ const SCHOOL = {
   schoolCode: "8961038",
 };
 
+// 제미나이 추천 서버(Cloudflare Worker) 주소. 비워 두면 앱에 들어 있는 기본 메뉴로 추천해요.
+// 예: "https://chunyang-dinner.<계정이름>.workers.dev"
+const AI_ENDPOINT = "";
+
+// 직접 입력 추천은 한 사람이 하루 2번까지
 const DAILY_LIMIT = 2;
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const state = {
@@ -14,6 +19,8 @@ const state = {
   weekStart: null,
   // 주 시작일(YYYY-MM-DD) → { "YYYYMMDD": NEIS row }
   weekCache: new Map(),
+  // 그날 제미나이가 미리 만든 취향별 추천 { date, prefs }
+  ai: null,
 };
 
 const elements = {
@@ -37,7 +44,13 @@ const elements = {
   recommendations: document.querySelector("#recommendations"),
   quotaCount: document.querySelector("#quotaCount"),
   lockMessage: document.querySelector("#lockMessage"),
+  aiNotice: document.querySelector("#aiNotice"),
   prefButtons: document.querySelectorAll(".pref-button"),
+  customForm: document.querySelector("#customForm"),
+  customInput: document.querySelector("#customInput"),
+  customButton: document.querySelector("#customButton"),
+  customMessage: document.querySelector("#customMessage"),
+  customResults: document.querySelector("#customResults"),
 };
 
 const keywordSets = {
@@ -58,7 +71,7 @@ const dinnerPool = [
     title: "두부버섯덮밥 + 오이무침",
     tags: ["담백", "부드러운 식감", "한 그릇"],
     avoids: [],
-    prefs: ["balanced", "light", "veggie"],
+    prefs: ["balanced", "light", "veggie", "bowl", "quick"],
     reason: "버섯 향과 두부의 부드러움이 저녁을 차분하게 정리해줘요.",
   },
   {
@@ -72,14 +85,14 @@ const dinnerPool = [
     title: "계란찜 + 애호박볶음 + 맑은 미역국",
     tags: ["부드러움", "편안함", "맑은 국"],
     avoids: [],
-    prefs: ["light", "balanced"],
+    prefs: ["light", "balanced", "quick"],
     reason: "간단하고 부드러운 맛이라 편안한 저녁을 만들기 좋아요.",
   },
   {
     title: "버섯콩나물밥 + 양념장 조금",
     tags: ["향긋함", "채소", "가벼운 한 그릇"],
     avoids: [],
-    prefs: ["veggie", "light", "balanced"],
+    prefs: ["veggie", "light", "balanced", "bowl"],
     reason: "콩나물 식감과 버섯 향이 살아 있어서 부담 없이 먹기 좋은 한 그릇이에요.",
   },
   {
@@ -93,29 +106,50 @@ const dinnerPool = [
     title: "채소 샤브샤브 + 칼국수 조금",
     tags: ["따뜻함", "선택 쉬움", "채소"],
     avoids: [],
-    prefs: ["veggie", "hearty", "balanced"],
+    prefs: ["veggie", "hearty", "balanced", "noodle"],
     reason: "익힌 채소와 국물이 중심이라 천천히 먹기 좋아요.",
   },
   {
     title: "참치김치볶음밥 + 달걀후라이",
     tags: ["빠른 준비", "집밥", "고소함"],
     avoids: ["seafood"],
-    prefs: ["hearty"],
+    prefs: ["hearty", "bowl", "quick", "spicy"],
     reason: "준비가 빠르고 맛의 방향이 또렷해서 바쁜 저녁에 잘 맞아요.",
   },
   {
     title: "들깨수제비 + 부추겉절이",
     tags: ["고소함", "따뜻함", "포근함"],
     avoids: [],
-    prefs: ["hearty"],
+    prefs: ["hearty", "noodle"],
     reason: "들깨 국물이 포근해서 날씨가 선선하거나 따뜻한 메뉴가 끌릴 때 좋아요.",
   },
   {
     title: "비빔밥 + 고추장 적게",
     tags: ["색감", "한 그릇", "깔끔함"],
     avoids: [],
-    prefs: ["veggie", "balanced"],
+    prefs: ["veggie", "balanced", "bowl", "spicy"],
     reason: "여러 재료를 한 그릇에 담아 보기 좋고, 양념을 부드럽게 맞추기 쉬워요.",
+  },
+  {
+    title: "잔치국수 + 달걀지단",
+    tags: ["면 요리", "맑은 국물", "금방 완성"],
+    avoids: [],
+    prefs: ["noodle", "light", "quick"],
+    reason: "멸치 국물에 소면을 말면 금방 차릴 수 있고, 속도 편안해요.",
+  },
+  {
+    title: "순한 닭갈비 볶음밥",
+    tags: ["매콤달콤", "한 그릇", "든든함"],
+    avoids: ["chicken"],
+    prefs: ["spicy", "hearty", "bowl"],
+    reason: "고추장을 조금만 넣어 살짝 매콤하게 볶으면 맛있게 한 그릇 뚝딱이에요.",
+  },
+  {
+    title: "토마토달걀볶음 + 쌀밥",
+    tags: ["10분 요리", "새콤달콤", "채소"],
+    avoids: [],
+    prefs: ["quick", "light", "veggie"],
+    reason: "토마토와 달걀만 있으면 10분 안에 뚝딱, 새콤달콤해서 입맛이 살아나요.",
   },
 ];
 
@@ -160,7 +194,7 @@ function dayLabel(iso) {
 }
 
 function usageKey() {
-  return `chunyang-dinner-usage:v4:${todayIso()}`;
+  return `chunyang-dinner-custom:v1:${todayIso()}`;
 }
 
 function getUsage() {
@@ -175,9 +209,11 @@ function setUsage(nextValue) {
 
 function updateQuota() {
   const remaining = Math.max(DAILY_LIMIT - getUsage(), 0);
-  elements.quotaCount.textContent = `${remaining}번`;
-  elements.recommendButton.disabled = remaining <= 0 || !state.meal;
-  elements.lockMessage.hidden = remaining > 0;
+  elements.quotaCount.textContent = AI_ENDPOINT ? `${remaining}번` : "준비 중";
+  elements.recommendButton.disabled = !state.meal;
+  elements.customButton.disabled = !AI_ENDPOINT || remaining <= 0;
+  elements.customInput.disabled = !AI_ENDPOINT || remaining <= 0;
+  elements.lockMessage.hidden = !AI_ENDPOINT || remaining > 0;
 }
 
 function setStatus(message, isError = false) {
@@ -316,6 +352,9 @@ function resetMealUi() {
   elements.balanceCopy.textContent = "날짜를 고르면 맛있는 점심 메뉴와 추천 저녁을 보여줄게요!";
   elements.analysisTags.replaceChildren();
   elements.recommendations.replaceChildren();
+  elements.aiNotice.hidden = true;
+  elements.customResults.replaceChildren();
+  elements.customMessage.hidden = true;
 }
 
 // 월~금 급식을 한 번에 받아서 주 단위로 저장
@@ -387,6 +426,7 @@ async function selectDate(iso) {
   state.weekStart = weekStart;
   state.meal = null;
   state.note = null;
+  state.ai = null;
   elements.date.value = target;
   elements.lunchTitle.textContent = target === todayIso() ? "오늘 점심" : `${dayLabel(target)} 점심`;
   resetMealUi();
@@ -436,6 +476,36 @@ async function selectDate(iso) {
   renderMeal(meal);
   renderNote(state.note);
   updateQuota();
+  loadAiDaily(target);
+}
+
+// ---------------- 제미나이 추천 ----------------
+async function loadAiDaily(date, attempt = 0) {
+  if (!AI_ENDPOINT) return;
+  try {
+    const response = await fetch(`${AI_ENDPOINT}/daily?date=${date}`);
+    if (!response.ok) throw new Error("ai");
+    const data = await response.json();
+    if (state.selectedDate !== date) return;
+
+    // 다른 친구가 막 만드는 중이면 잠시 뒤 다시 받아요
+    if (data.pending && attempt < 6) {
+      setTimeout(() => loadAiDaily(date, attempt + 1), 4000);
+      return;
+    }
+    if (!data.prefs) return;
+
+    state.ai = { date, prefs: data.prefs };
+    if (elements.recommendations.children.length) renderRecommendations(buildRecommendations());
+  } catch (error) {
+    // 서버가 안 되면 기본 메뉴로 추천해요
+  }
+}
+
+function aiItemsFor(preference) {
+  if (!state.ai || state.ai.date !== state.selectedDate) return null;
+  const items = state.ai.prefs?.[preference];
+  return items?.length ? items : null;
 }
 
 function recommendationRank(item, note) {
@@ -455,12 +525,14 @@ function recommendationRank(item, note) {
 
 function buildRecommendations() {
   if (!state.meal || !state.note) return [];
+  const aiItems = aiItemsFor(state.preference);
+  if (aiItems) return aiItems.map((item) => ({ ...item, ai: true }));
   return [...dinnerPool]
     .sort((a, b) => recommendationRank(b, state.note) - recommendationRank(a, state.note))
     .slice(0, 3);
 }
 
-function renderRecommendations(items) {
+function renderRecommendations(items, target = elements.recommendations) {
   const fragment = document.createDocumentFragment();
 
   items.forEach((item) => {
@@ -481,23 +553,73 @@ function renderRecommendations(items) {
       tags.append(badge);
     });
 
+    if (item.ai) {
+      const source = document.createElement("span");
+      source.className = "ai-badge";
+      source.textContent = "✨ 제미나이";
+      card.append(source);
+    }
+
     card.append(title, reason, tags);
     fragment.append(card);
   });
 
-  elements.recommendations.replaceChildren(fragment);
+  target.replaceChildren(fragment);
 }
 
 function recommendDinner() {
   if (!state.meal) return;
-  const used = getUsage();
-  if (used >= DAILY_LIMIT) {
-    updateQuota();
-    return;
-  }
+  const items = buildRecommendations();
+  renderRecommendations(items);
+  elements.aiNotice.hidden = false;
+  elements.aiNotice.textContent = items[0]?.ai
+    ? "✨ 오늘 점심을 보고 제미나이가 미리 골라 둔 메뉴예요."
+    : "🍽️ 앱에 들어 있는 기본 메뉴 중에서 골랐어요.";
+}
 
-  renderRecommendations(buildRecommendations());
-  setUsage(used + 1);
+function showCustomMessage(message, isError = false) {
+  elements.customMessage.hidden = !message;
+  elements.customMessage.textContent = message;
+  elements.customMessage.classList.toggle("error", isError);
+}
+
+async function askCustom(event) {
+  event.preventDefault();
+  const text = elements.customInput.value.trim();
+  const used = getUsage();
+  if (!AI_ENDPOINT || !text || used >= DAILY_LIMIT) return;
+
+  const date = state.selectedDate || todayIso();
+  elements.customButton.disabled = true;
+  elements.customResults.replaceChildren();
+  showCustomMessage("제미나이가 열심히 고르는 중이에요… 🍳");
+
+  try {
+    const response = await fetch(`${AI_ENDPOINT}/custom`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, text }),
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      // 잘못 쓴 글이나 서버 문제는 횟수를 깎지 않아요
+      showCustomMessage(data.message || "다시 한번 적어 줄래요?", true);
+      return;
+    }
+
+    setUsage(used + 1);
+    showCustomMessage(data.message);
+    renderRecommendations(
+      data.items.map((item) => ({ ...item, ai: true })),
+      elements.customResults,
+    );
+    elements.customInput.value = "";
+  } catch (error) {
+    showCustomMessage("인터넷 연결이 조금 불안한가 봐요 😭", true);
+  } finally {
+    updateQuota();
+  }
 }
 
 function bindEvents() {
@@ -508,14 +630,13 @@ function bindEvents() {
     if (elements.date.value) selectDate(elements.date.value);
   });
   elements.recommendButton.addEventListener("click", recommendDinner);
+  elements.customForm.addEventListener("submit", askCustom);
   elements.prefButtons.forEach((button) => {
     button.addEventListener("click", () => {
       elements.prefButtons.forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       state.preference = button.dataset.pref;
-      if (elements.recommendations.children.length) {
-        renderRecommendations(buildRecommendations());
-      }
+      if (elements.recommendations.children.length) recommendDinner();
     });
   });
   // 선생님 사진이 없으면 이모지로 대신 보여줘요
