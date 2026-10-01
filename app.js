@@ -40,7 +40,6 @@ const elements = {
   balanceTitle: document.querySelector("#balanceTitle"),
   balanceCopy: document.querySelector("#balanceCopy"),
   analysisTags: document.querySelector("#analysisTags"),
-  recommendButton: document.querySelector("#recommendButton"),
   recommendations: document.querySelector("#recommendations"),
   quotaCount: document.querySelector("#quotaCount"),
   lockMessage: document.querySelector("#lockMessage"),
@@ -210,7 +209,6 @@ function setUsage(nextValue) {
 function updateQuota() {
   const remaining = Math.max(DAILY_LIMIT - getUsage(), 0);
   elements.quotaCount.textContent = AI_ENDPOINT ? `${remaining}번` : "준비 중";
-  elements.recommendButton.disabled = !state.meal;
   elements.customButton.disabled = !AI_ENDPOINT || remaining <= 0;
   elements.customInput.disabled = !AI_ENDPOINT || remaining <= 0;
   elements.lockMessage.hidden = !AI_ENDPOINT || remaining > 0;
@@ -476,6 +474,8 @@ async function selectDate(iso) {
   renderMeal(meal);
   renderNote(state.note);
   updateQuota();
+  // 점심이 나오면 저녁 추천도 바로 보여 주고, 제미나이 추천이 오면 바꿔 끼워요
+  recommendDinner();
   loadAiDaily(target);
 }
 
@@ -496,7 +496,7 @@ async function loadAiDaily(date, attempt = 0) {
     if (!data.prefs) return;
 
     state.ai = { date, prefs: data.prefs };
-    if (elements.recommendations.children.length) renderRecommendations(buildRecommendations());
+    if (state.meal) recommendDinner();
   } catch (error) {
     // 서버가 안 되면 기본 메뉴로 추천해요
   }
@@ -629,14 +629,13 @@ function bindEvents() {
   elements.date.addEventListener("change", () => {
     if (elements.date.value) selectDate(elements.date.value);
   });
-  elements.recommendButton.addEventListener("click", recommendDinner);
   elements.customForm.addEventListener("submit", askCustom);
   elements.prefButtons.forEach((button) => {
     button.addEventListener("click", () => {
       elements.prefButtons.forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       state.preference = button.dataset.pref;
-      if (elements.recommendations.children.length) recommendDinner();
+      recommendDinner();
     });
   });
   // 선생님 사진이 없으면 이모지로 대신 보여줘요
