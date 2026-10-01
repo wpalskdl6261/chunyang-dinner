@@ -407,7 +407,7 @@ function describeMeal(meal) {
     // 너무 길어지지 않게 최대 2개 장점만 연결
     benefitText = benefits.slice(0, 2).join(" 그리고 ");
   } else {
-    benefitText = "선생님이 골고루 챙겨 준 식단이라 쑥쑥 자라는 데 최고랍니다!";
+    benefitText = "지은쌤이 골고루 챙겨 준 식단이라 쑥쑥 자라는 데 최고랍니다!";
   }
 
   const copy = `${benefitText} 저녁은 점심이랑 겹치지 않게 골라 볼까요?`;
@@ -541,7 +541,7 @@ async function selectDate(iso) {
   updateQuota();
 
   if (!state.weekCache.has(weekStart)) {
-    setStatus("영양 선생님의 식단을 가져오는 중이에요! 🏃‍♂️");
+    setStatus("지은쌤의 식단을 가져오는 중이에요! 🏃‍♂️");
   }
 
   let week;
@@ -606,6 +606,16 @@ async function loadAiDaily(date, attempt = 0) {
 
     state.ai = { date, prefs: data.prefs };
     if (state.meal) recommendDinner();
+
+    // 지은쌤의 한마디도 제미나이가 쓴 걸로 바꿔요 (없으면 앱이 만든 한마디 그대로)
+    if (data.note) {
+      const tones = ["warm", "cool", "green", "accent"];
+      renderNote({
+        title: data.note.title,
+        copy: data.note.copy,
+        tags: data.note.tags.map((text, i) => ({ text, tone: tones[i % tones.length] })),
+      });
+    }
   } catch (error) {
     // 서버가 안 되면 기본 메뉴로 추천해요
   }

@@ -33,7 +33,7 @@ const PREFS = {
   quick: "10분 완성 – 집에서 금방 차릴 수 있게",
 };
 
-const SYSTEM_PROMPT = `너는 경상북도 봉화 춘양초등학교의 친절한 영양 선생님이야.
+const SYSTEM_PROMPT = `너는 경상북도 봉화 춘양초등학교의 영양교사 "지은쌤"이야. 학생들에게 다정하고 밝게 말해.
 학생(초등학생)이 학교 점심을 먹은 뒤, 집에서 먹을 저녁 메뉴를 추천해 줘.
 규칙:
 - 점심에 나온 주재료·조리법·맛과 겹치지 않게 골라.
@@ -160,6 +160,16 @@ const DISH_SCHEMA = {
 
 const DISH_LIST_SCHEMA = { type: "ARRAY", items: DISH_SCHEMA };
 
+const NOTE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    title: { type: "STRING" },
+    copy: { type: "STRING" },
+    tags: { type: "ARRAY", items: { type: "STRING" } },
+  },
+  required: ["title", "copy", "tags"],
+};
+
 async function callGemini(env, prompt, schema) {
   const model = env.GEMINI_MODEL || DEFAULT_MODEL;
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -207,19 +217,36 @@ async function buildDaily(env, iso) {
   const prompt = `오늘(${iso}) 학교 점심 메뉴: ${lunch.join(", ")}
 
 아래 8가지 취향마다 저녁 메뉴를 ${DAILY_PER_PREF}개씩 추천해 줘. 모두 합쳐 같은 메뉴가 두 번 나오지 않게 해 줘.
-${prefLines}${recent.length ? `\n\n최근 며칠 동안 이미 추천한 메뉴야. 되도록 이것과 다른 메뉴로 골라 줘: ${recent.join(", ")}` : ""}`;
+${prefLines}${recent.length ? `\n\n최근 며칠 동안 이미 추천한 메뉴야. 되도록 이것과 다른 메뉴로 골라 줘: ${recent.join(", ")}` : ""}
+
+그리고 note에는 지은쌤이 학생들에게 오늘 점심을 소개하는 한마디를 써 줘.
+- title: 오늘 점심을 한 줄로 소개 (25자 안, 이모지 1개까지)
+- copy: 오늘 메뉴 중 한두 가지를 콕 집어 어떤 영양소가 몸에 어떻게 좋은지 알려 주고, 저녁 추천으로 이어지는 말 (2~3문장, 120자 안)
+- tags: 오늘 점심의 특징 2~4개 (각 6자 안)`;
 
   const schema = {
     type: "OBJECT",
-    properties: Object.fromEntries(Object.keys(PREFS).map((key) => [key, DISH_LIST_SCHEMA])),
-    required: Object.keys(PREFS),
+    properties: {
+      note: NOTE_SCHEMA,
+      ...Object.fromEntries(Object.keys(PREFS).map((key) => [key, DISH_LIST_SCHEMA])),
+    },
+    required: ["note", ...Object.keys(PREFS)],
   };
 
   const result = await callGemini(env, prompt, schema);
   const prefs = Object.fromEntries(
     Object.keys(PREFS).map((key) => [key, tidyDishes(result[key], DAILY_PER_PREF)]),
   );
-  return { date: iso, lunch, prefs, model: env.GEMINI_MODEL || DEFAULT_MODEL };
+  return { date: iso, lunch, note: tidyNote(result.note), prefs, model: env.GEMINI_MODEL || DEFAULT_MODEL };
+}
+
+function tidyNote(note) {
+  if (!note?.title || !note?.copy) return null;
+  return {
+    title: String(note.title).slice(0, 40),
+    copy: String(note.copy).slice(0, 200),
+    tags: (Array.isArray(note.tags) ? note.tags : []).slice(0, 4).map((t) => String(t).slice(0, 10)),
+  };
 }
 
 // 앞선 며칠 동안 저장된 추천 메뉴 이름 (없으면 빈 배열)
