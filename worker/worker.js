@@ -14,6 +14,10 @@ const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 const DEFAULT_CUSTOM_LIMIT = 150;
 const DEFAULT_ORIGINS = ["https://wpalskdl6261.github.io", "http://localhost:8765", "http://127.0.0.1:8765"];
 const CUSTOM_MAX_LENGTH = 20;
+// 취향마다 받아 두는 추천 수 (앱에서 3개씩 넘겨 보기)
+const DAILY_PER_PREF = 6;
+// 최근 며칠 추천과 겹치지 않게
+const RECENT_DAYS = 5;
 // 미리 만들어 둘 수 있는 날짜 범위 (아무 날짜나 눌러서 요청이 늘어나지 않게)
 const DAYS_BACK = 7;
 const DAYS_AHEAD = 14;
@@ -35,6 +39,7 @@ const SYSTEM_PROMPT = `너는 경상북도 봉화 춘양초등학교의 친절�
 - 점심에 나온 주재료·조리법·맛과 겹치지 않게 골라.
 - 한국 가정에서 구하기 쉬운 재료로, 초등학생이 좋아할 만한 메뉴로.
 - 술, 카페인, 아주 매운 음식, 날음식(회 등)은 추천하지 마.
+- 한식만 고르지 말고 양식·중식·일식·분식 등도 골고루 섞어 다양하게.
 - reason은 초등학생에게 말하듯 다정한 존댓말 한두 문장(60자 안팎)으로.
 - tags는 2~3개, 각 6자 이내.`;
 
@@ -180,10 +185,10 @@ async function callGemini(env, prompt, schema) {
   return JSON.parse(text);
 }
 
-function tidyDishes(list) {
+function tidyDishes(list, max = 3) {
   return (Array.isArray(list) ? list : [])
     .filter((d) => d && d.title)
-    .slice(0, 3)
+    .slice(0, max)
     .map((d) => ({
       title: String(d.title).slice(0, 40),
       reason: String(d.reason || "").slice(0, 120),
@@ -198,10 +203,11 @@ async function buildDaily(env, iso) {
   const prefLines = Object.entries(PREFS)
     .map(([key, label]) => `- ${key}: ${label}`)
     .join("\n");
+  const recent = await recentTitles(env, iso);
   const prompt = `오늘(${iso}) 학교 점심 메뉴: ${lunch.join(", ")}
 
-아래 8가지 취향마다 저녁 메뉴를 3개씩 추천해 줘. 취향끼리 메뉴가 겹치지 않게 해 줘.
-${prefLines}`;
+아래 8가지 취향마다 저녁 메뉴를 ${DAILY_PER_PREF}개씩 추천해 줘. 모두 합쳐 같은 메뉴가 두 번 나오지 않게 해 줘.
+${prefLines}${recent.length ? `\n\n최근 며칠 동안 이미 추천한 메뉴야. 되도록 이것과 다른 메뉴로 골라 줘: ${recent.join(", ")}` : ""}`;
 
   const schema = {
     type: "OBJECT",
@@ -210,8 +216,21 @@ ${prefLines}`;
   };
 
   const result = await callGemini(env, prompt, schema);
-  const prefs = Object.fromEntries(Object.keys(PREFS).map((key) => [key, tidyDishes(result[key])]));
+  const prefs = Object.fromEntries(
+    Object.keys(PREFS).map((key) => [key, tidyDishes(result[key], DAILY_PER_PREF)]),
+  );
   return { date: iso, lunch, prefs, model: env.GEMINI_MODEL || DEFAULT_MODEL };
+}
+
+// 앞선 며칠 동안 저장된 추천 메뉴 이름 (없으면 빈 배열)
+async function recentTitles(env, iso) {
+  const titles = new Set();
+  for (let i = 1; i <= RECENT_DAYS; i += 1) {
+    const date = new Date(Date.parse(`${iso}T00:00:00Z`) - i * 86400000).toISOString().slice(0, 10);
+    const daily = await env.CACHE.get(`daily:${date}`, "json");
+    Object.values(daily?.prefs || {}).forEach((list) => list.forEach((d) => titles.add(d.title)));
+  }
+  return [...titles].slice(0, 80);
 }
 
 async function getDaily(env, iso) {

@@ -21,7 +21,12 @@ const state = {
   weekCache: new Map(),
   // 그날 제미나이가 미리 만든 취향별 추천 { date, prefs }
   ai: null,
+  // 취향별로 「다른 메뉴 보기」를 몇 번 눌렀는지
+  pages: {},
 };
+
+const PAGE_SIZE = 3;
+const CANDIDATE_COUNT = 6;
 
 const elements = {
   date: document.querySelector("#mealDate"),
@@ -44,6 +49,8 @@ const elements = {
   quotaCount: document.querySelector("#quotaCount"),
   lockMessage: document.querySelector("#lockMessage"),
   aiNotice: document.querySelector("#aiNotice"),
+  shuffleButton: document.querySelector("#shuffleButton"),
+  shufflePage: document.querySelector("#shufflePage"),
   prefButtons: document.querySelectorAll(".pref-button"),
   customForm: document.querySelector("#customForm"),
   customInput: document.querySelector("#customInput"),
@@ -63,6 +70,8 @@ const keywordSets = {
   sweet: ["케이크", "초코", "푸딩", "요거트", "아이스", "젤리", "주스", "과일", "사과", "배"],
   veggie: ["나물", "샐러드", "채소", "묵", "오이", "브로콜리", "양배추", "버섯", "시금치", "김치"],
   soup: ["국", "탕", "찌개", "스프", "수제비"],
+  egg: ["계란", "달걀", "에그", "오믈렛"],
+  noodle: ["면", "국수", "우동", "스파게티", "파스타", "칼국수", "짜장"],
 };
 
 const dinnerPool = [
@@ -83,7 +92,7 @@ const dinnerPool = [
   {
     title: "계란찜 + 애호박볶음 + 맑은 미역국",
     tags: ["부드러움", "편안함", "맑은 국"],
-    avoids: [],
+    avoids: ["egg"],
     prefs: ["light", "balanced", "quick"],
     reason: "간단하고 부드러운 맛이라 편안한 저녁을 만들기 좋아요.",
   },
@@ -104,21 +113,21 @@ const dinnerPool = [
   {
     title: "채소 샤브샤브 + 칼국수 조금",
     tags: ["따뜻함", "선택 쉬움", "채소"],
-    avoids: [],
+    avoids: ["noodle"],
     prefs: ["veggie", "hearty", "balanced", "noodle"],
     reason: "익힌 채소와 국물이 중심이라 천천히 먹기 좋아요.",
   },
   {
     title: "참치김치볶음밥 + 달걀후라이",
     tags: ["빠른 준비", "집밥", "고소함"],
-    avoids: ["seafood"],
+    avoids: ["seafood", "egg"],
     prefs: ["hearty", "bowl", "quick", "spicy"],
     reason: "준비가 빠르고 맛의 방향이 또렷해서 바쁜 저녁에 잘 맞아요.",
   },
   {
     title: "들깨수제비 + 부추겉절이",
     tags: ["고소함", "따뜻함", "포근함"],
-    avoids: [],
+    avoids: ["noodle"],
     prefs: ["hearty", "noodle"],
     reason: "들깨 국물이 포근해서 날씨가 선선하거나 따뜻한 메뉴가 끌릴 때 좋아요.",
   },
@@ -132,7 +141,7 @@ const dinnerPool = [
   {
     title: "잔치국수 + 달걀지단",
     tags: ["면 요리", "맑은 국물", "금방 완성"],
-    avoids: [],
+    avoids: ["noodle", "egg"],
     prefs: ["noodle", "light", "quick"],
     reason: "멸치 국물에 소면을 말면 금방 차릴 수 있고, 속도 편안해요.",
   },
@@ -146,9 +155,107 @@ const dinnerPool = [
   {
     title: "토마토달걀볶음 + 쌀밥",
     tags: ["10분 요리", "새콤달콤", "채소"],
-    avoids: [],
+    avoids: ["egg"],
     prefs: ["quick", "light", "veggie"],
     reason: "토마토와 달걀만 있으면 10분 안에 뚝딱, 새콤달콤해서 입맛이 살아나요.",
+  },
+  {
+    title: "채소 듬뿍 카레라이스",
+    tags: ["한 그릇", "향긋함", "든든함"],
+    avoids: [],
+    prefs: ["bowl", "hearty", "balanced", "veggie"],
+    reason: "감자·당근·양파가 듬뿍 들어가서 한 그릇만 먹어도 든든해요.",
+  },
+  {
+    title: "꼬마김밥 + 어묵국",
+    tags: ["분식", "한입 쏙", "따뜻한 국"],
+    avoids: [],
+    prefs: ["light", "balanced"],
+    reason: "한입에 쏙 들어가는 꼬마김밥이라 먹기 편하고, 어묵국이 속을 데워 줘요.",
+  },
+  {
+    title: "짜장덮밥 + 단무지",
+    tags: ["중식", "달콤짭짤", "한 그릇"],
+    avoids: ["pork", "noodle"],
+    prefs: ["bowl", "hearty"],
+    reason: "달콤짭짤한 짜장 소스에 밥을 쓱쓱 비비면 금방 한 그릇을 비워요.",
+  },
+  {
+    title: "따끈한 어묵우동",
+    tags: ["면 요리", "맑은 국물", "포근함"],
+    avoids: ["noodle"],
+    prefs: ["noodle", "light", "quick"],
+    reason: "통통한 우동 면과 맑은 국물이 부드러워서 저녁에 편하게 먹기 좋아요.",
+  },
+  {
+    title: "비빔국수 + 삶은 달걀",
+    tags: ["새콤달콤", "면 요리", "시원함"],
+    avoids: ["noodle", "egg"],
+    prefs: ["noodle", "spicy"],
+    reason: "새콤달콤 살짝 매콤한 양념이 입맛을 확 살려 줘요.",
+  },
+  {
+    title: "토마토 스파게티 + 브로콜리",
+    tags: ["양식", "새콤달콤", "면 요리"],
+    avoids: ["noodle"],
+    prefs: ["noodle", "balanced"],
+    reason: "토마토 소스에 채소를 듬뿍 넣으면 맛도 영양도 모두 챙길 수 있어요.",
+  },
+  {
+    title: "닭가슴살 샐러드 + 구운 고구마",
+    tags: ["가벼움", "채소", "달콤함"],
+    avoids: ["chicken"],
+    prefs: ["light", "veggie"],
+    reason: "아삭한 채소와 달콤한 고구마로 가볍지만 배는 든든해요.",
+  },
+  {
+    title: "돼지고기 김치찌개 + 밥",
+    tags: ["한식", "얼큰함", "든든함"],
+    avoids: ["pork"],
+    prefs: ["spicy", "hearty", "balanced"],
+    reason: "푹 익은 김치와 고기가 어우러져서 밥 한 공기가 뚝딱이에요.",
+  },
+  {
+    title: "새우볶음밥 + 맑은 달걀국",
+    tags: ["볶음밥", "고소함", "금방 완성"],
+    avoids: ["seafood", "egg"],
+    prefs: ["bowl", "quick"],
+    reason: "냉동 새우와 채소만 있으면 금방 만들 수 있는 고소한 볶음밥이에요.",
+  },
+  {
+    title: "불고기 + 쌈채소 + 잡곡밥",
+    tags: ["달콤짭짤", "쌈 싸 먹기", "채소"],
+    avoids: ["beef"],
+    prefs: ["hearty", "veggie", "balanced"],
+    reason: "달콤한 불고기를 상추에 싸 먹으면 채소도 저절로 많이 먹게 돼요.",
+  },
+  {
+    title: "알록달록 월남쌈",
+    tags: ["채소 듬뿍", "직접 싸 먹기", "상큼함"],
+    avoids: [],
+    prefs: ["veggie", "light"],
+    reason: "좋아하는 채소를 골라 직접 싸 먹는 재미가 있는 저녁이에요.",
+  },
+  {
+    title: "콩나물국밥",
+    tags: ["시원한 국물", "한 그릇", "담백함"],
+    avoids: [],
+    prefs: ["bowl", "light"],
+    reason: "시원한 콩나물 국물에 밥을 말아 먹으면 속이 편안해져요.",
+  },
+  {
+    title: "치즈 달걀토스트 + 우유",
+    tags: ["5분 요리", "고소함", "간단"],
+    avoids: ["egg"],
+    prefs: ["quick", "light"],
+    reason: "식빵에 달걀과 치즈만 올려 구우면 5분 만에 완성이에요.",
+  },
+  {
+    title: "떡국 + 김치",
+    tags: ["쫄깃함", "따뜻함", "한식"],
+    avoids: [],
+    prefs: ["hearty", "quick", "balanced"],
+    reason: "쫄깃한 떡과 따뜻한 국물이 든든하고, 만들기도 어렵지 않아요.",
   },
 ];
 
@@ -351,6 +458,7 @@ function resetMealUi() {
   elements.analysisTags.replaceChildren();
   elements.recommendations.replaceChildren();
   elements.aiNotice.hidden = true;
+  elements.shuffleButton.hidden = true;
   elements.customResults.replaceChildren();
   elements.customMessage.hidden = true;
 }
@@ -425,6 +533,7 @@ async function selectDate(iso) {
   state.meal = null;
   state.note = null;
   state.ai = null;
+  state.pages = {};
   elements.date.value = target;
   elements.lunchTitle.textContent = target === todayIso() ? "오늘 점심" : `${dayLabel(target)} 점심`;
   resetMealUi();
@@ -512,24 +621,38 @@ function recommendationRank(item, note) {
   let rank = item.prefs.includes(state.preference) ? 16 : 0;
   const calories = Number.parseFloat(state.meal.calories);
 
-  if (state.preference === "balanced" && item.prefs.includes("balanced")) rank += 6;
   if ((note.flags.fried || note.flags.sweet || calories >= 700) && item.prefs.includes("light")) rank += 8;
   if (note.flags.spicy && item.prefs.includes("light")) rank += 5;
   if (note.flags.chicken && item.avoids.includes("chicken")) rank -= 24;
   if (note.flags.pork && item.avoids.includes("pork")) rank -= 24;
   if (note.flags.beef && item.avoids.includes("beef")) rank -= 24;
   if (note.flags.seafood && item.avoids.includes("seafood")) rank -= 18;
+  if (note.flags.egg && item.avoids.includes("egg")) rank -= 14;
+  if (note.flags.noodle && item.avoids.includes("noodle")) rank -= 14;
 
-  return rank + item.title.length / 100;
+  // 날짜마다 다르게 섞되, 같은 날에는 누구에게나 같은 순서
+  return rank + seededRandom(`${state.selectedDate}:${state.preference}:${item.title}`) * 16;
 }
 
-function buildRecommendations() {
+// 글자를 넣으면 늘 같은 0~1 사이 값이 나와요
+function seededRandom(text) {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) / 4294967296;
+}
+
+// 그 취향의 후보 전체 (제미나이 6개, 없으면 기본 메뉴 중 잘 맞는 6개)
+function buildCandidates() {
   if (!state.meal || !state.note) return [];
   const aiItems = aiItemsFor(state.preference);
   if (aiItems) return aiItems.map((item) => ({ ...item, ai: true }));
-  return [...dinnerPool]
+  return dinnerPool
+    .filter((item) => item.prefs.includes(state.preference))
     .sort((a, b) => recommendationRank(b, state.note) - recommendationRank(a, state.note))
-    .slice(0, 3);
+    .slice(0, CANDIDATE_COUNT);
 }
 
 function renderRecommendations(items, target = elements.recommendations) {
@@ -569,12 +692,23 @@ function renderRecommendations(items, target = elements.recommendations) {
 
 function recommendDinner() {
   if (!state.meal) return;
-  const items = buildRecommendations();
+  const candidates = buildCandidates();
+  const pageCount = Math.max(Math.ceil(candidates.length / PAGE_SIZE), 1);
+  const page = (state.pages[state.preference] || 0) % pageCount;
+  const items = candidates.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+
   renderRecommendations(items);
   elements.aiNotice.hidden = false;
   elements.aiNotice.textContent = items[0]?.ai
     ? "✨ 오늘 점심을 보고 제미나이가 미리 골라 둔 메뉴예요."
     : "🍽️ 앱에 들어 있는 기본 메뉴 중에서 골랐어요.";
+  elements.shuffleButton.hidden = pageCount < 2;
+  elements.shufflePage.textContent = `${page + 1}/${pageCount}`;
+}
+
+function showNextPage() {
+  state.pages[state.preference] = (state.pages[state.preference] || 0) + 1;
+  recommendDinner();
 }
 
 function showCustomMessage(message, isError = false) {
@@ -630,6 +764,7 @@ function bindEvents() {
     if (elements.date.value) selectDate(elements.date.value);
   });
   elements.customForm.addEventListener("submit", askCustom);
+  elements.shuffleButton.addEventListener("click", showNextPage);
   elements.prefButtons.forEach((button) => {
     button.addEventListener("click", () => {
       elements.prefButtons.forEach((item) => item.classList.remove("active"));
