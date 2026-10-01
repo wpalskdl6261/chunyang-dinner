@@ -25,14 +25,14 @@
   --rose-light: #fce4ec;
   --rose-text: #c2185b;
 
-  --radius-sm: 14px;
-  --radius-md: 20px;
-  --radius-lg: 28px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
   --radius-pill: 9999px;
 
-  --border-thick: 3px;
-  --shadow-sm: 0 4px 0 rgba(0, 0, 0, 0.07);
-  --shadow-lg: 0 6px 0 rgba(0, 0, 0, 0.08);
+  --border-thick: 2px;
+  --shadow-sm: 0 1px 2px rgba(78, 52, 46, 0.06), 0 4px 12px rgba(78, 52, 46, 0.05);
+  --shadow-lg: 0 2px 4px rgba(78, 52, 46, 0.05), 0 12px 28px rgba(78, 52, 46, 0.08);
 }
 
 * {
@@ -48,11 +48,14 @@ body {
   margin: 0;
   color: var(--ink);
   background: var(--bg);
-  background-image: radial-gradient(rgba(121, 85, 72, 0.07) 2px, transparent 2px);
+  background-image: radial-gradient(rgba(121, 85, 72, 0.05) 1.5px, transparent 1.5px);
   background-size: 28px 28px;
-  font-family: "Jua", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 18px;
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
 }
 
 button,
@@ -94,32 +97,37 @@ h1, h2, h3, p { margin: 0; }
 .section-label {
   display: inline-block;
   margin-bottom: 8px;
-  padding: 4px 12px;
-  border: 2px solid var(--primary);
+  padding: 4px 10px;
+  border: 1.5px solid var(--primary);
   border-radius: var(--radius-pill);
   background: var(--primary-light);
   color: var(--primary-text);
-  font-size: 15px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 h1 {
   margin-bottom: 8px;
   color: var(--primary-text);
-  font-size: clamp(2.2rem, 5.5vw, 3.4rem);
-  line-height: 1.1;
-  text-shadow: 2px 2px 0 rgba(66, 165, 245, 0.2);
+  font-size: clamp(2rem, 5vw, 2.9rem);
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.04em;
 }
 
 h2 {
   color: var(--ink);
-  font-size: 24px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .lead {
   color: var(--muted);
-  font-size: 18px;
-  line-height: 1.45;
+  font-size: 17px;
+  line-height: 1.55;
   word-break: keep-all;
+  font-weight: 500;
 }
 
 /* --- Header --- */
@@ -141,15 +149,15 @@ h2 {
   flex-direction: column;
   align-items: center;
   padding: 12px 28px;
-  border: 3px dashed var(--amber);
+  border: 2px dashed var(--amber);
   border-radius: var(--radius-md);
   background: var(--amber-light);
   color: var(--amber-text);
   text-align: center;
 }
 
-.quota-pill span { font-size: 15px; }
-.quota-pill strong { margin-top: 2px; font-size: 32px; }
+.quota-pill span { font-size: 13px; font-weight: 600; }
+.quota-pill strong { margin-top: 2px; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; }
 
 /* --- Teacher card --- */
 .teacher-card {
@@ -157,7 +165,7 @@ h2 {
   align-items: center;
   gap: 28px;
   padding: 28px;
-  border: var(--border-thick) solid var(--green);
+  border: var(--border-thick) solid #c8e6c9;
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-lg);
@@ -171,7 +179,7 @@ h2 {
   width: 168px;
   height: 168px;
   overflow: hidden;
-  border: 5px solid var(--green);
+  border: 4px solid var(--green);
   border-radius: 50%;
   background: var(--green-light);
   box-shadow: inset 0 0 0 4px #fff;
@@ -201,7 +209,7 @@ h2 {
   gap: 10px;
   min-width: 0;
   padding: 22px 24px;
-  border: 3px solid var(--green);
+  border: 2px solid var(--green);
   border-radius: var(--radius-md);
   background: var(--green-light);
 }
@@ -222,21 +230,23 @@ h2 {
 
 .teacher-name {
   color: var(--green-text);
-  font-size: 15px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 #balanceTitle {
   color: var(--green-text);
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 #balanceCopy {
   color: var(--ink);
-  font-family: "Gowun Dodum", sans-serif;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.65;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.7;
   word-break: keep-all;
 }
 
@@ -250,12 +260,13 @@ h2 {
 .tag-row:empty { display: none; }
 
 .tag {
-  padding: 5px 14px;
-  border: 2px solid var(--subtle);
+  padding: 5px 12px;
+  border: 1.5px solid var(--subtle);
   border-radius: var(--radius-pill);
   background: #fff;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .tag.warm { border-color: var(--amber); background: var(--amber-light); color: var(--amber-text); }
@@ -283,8 +294,10 @@ h2 {
 #weekLabel {
   min-width: 96px;
   color: var(--primary-text);
-  font-size: 20px;
+  font-size: 18px;
   text-align: center;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .week-tools {
@@ -301,7 +314,7 @@ h2 {
   justify-content: center;
   gap: 6px;
   height: 44px;
-  border: 2px solid var(--subtle);
+  border: 1.5px solid var(--subtle);
   border-radius: var(--radius-pill);
   background: #fff;
   cursor: pointer;
@@ -309,7 +322,7 @@ h2 {
 }
 
 .round-button { width: 44px; }
-.chip-button { padding: 0 16px; font-size: 17px; }
+.chip-button { padding: 0 16px; font-size: 15px; font-weight: 600; }
 .date-chip { position: relative; width: 44px; }
 
 /* 달력 아이콘만 보이고, 누르면 날짜 선택창이 열려요 */
@@ -355,7 +368,7 @@ h2 {
   align-items: center;
   gap: 2px;
   padding: 10px 4px;
-  border: 3px solid var(--primary-light);
+  border: 2px solid var(--primary-light);
   border-radius: var(--radius-md);
   background: #fff;
   cursor: pointer;
@@ -363,9 +376,9 @@ h2 {
 }
 
 .day-button:hover { transform: translateY(-2px); border-color: var(--primary); }
-.day-button .day-name { color: var(--muted); font-size: 15px; }
-.day-button strong { font-size: 24px; }
-.day-button .day-dot { font-size: 14px; color: var(--subtle); }
+.day-button .day-name { color: var(--muted); font-size: 14px; font-weight: 600; }
+.day-button strong { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.day-button .day-dot { color: var(--subtle); font-size: 13px; }
 
 .day-button.today { border-color: var(--amber); }
 .day-button.today .day-name::after { content: " · 오늘"; color: var(--amber-text); }
@@ -406,22 +419,24 @@ h2 {
 .source-badge {
   flex-shrink: 0;
   padding: 6px 14px;
-  border: 2px solid #f57f17;
+  border: 1.5px solid #f57f17;
   border-radius: var(--radius-pill);
   background: #ffe082;
   color: #e65100;
-  font-size: 15px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .status-line {
   margin-bottom: 16px;
   padding: 10px 12px;
-  border: 2px dashed var(--subtle);
+  border: 1.5px dashed var(--subtle);
   border-radius: var(--radius-sm);
   background: var(--surface-soft);
   color: var(--muted);
-  font-size: 17px;
+  font-size: 15px;
   text-align: center;
+  font-weight: 600;
 }
 
 .status-line.error {
@@ -444,12 +459,13 @@ h2 {
 .meal-list li {
   display: flex;
   align-items: center;
-  padding: 12px 18px;
-  border: 3px solid var(--primary-light);
+  padding: 13px 16px;
+  border: 2px solid var(--primary-light);
   border-radius: var(--radius-md);
   background: #fff;
-  font-size: 19px;
+  font-size: 17px;
   transition: border-color 0.15s;
+  font-weight: 600;
 }
 
 .meal-list li:hover { border-color: var(--primary); }
@@ -457,7 +473,7 @@ h2 {
 .meal-list li::before {
   content: "⭐";
   margin-right: 10px;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .nutrition-row {
@@ -465,7 +481,7 @@ h2 {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   padding-top: 20px;
-  border-top: 3px dashed var(--amber-light);
+  border-top: 2px dashed var(--amber-light);
 }
 
 .nutrition-row div {
@@ -480,13 +496,17 @@ h2 {
 
 .metric-label {
   color: var(--muted);
-  font-size: 15px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .nutrition-row strong {
   margin-top: 4px;
   color: var(--amber-text);
-  font-size: 22px;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Recommendations --- */
@@ -507,7 +527,7 @@ h2 {
   gap: 6px;
   width: 100%;
   padding: 6px;
-  border: 3px solid var(--subtle);
+  border: 2px solid var(--primary-light);
   border-radius: var(--radius-md);
   background: var(--surface);
 }
@@ -519,9 +539,10 @@ h2 {
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--muted);
-  font-size: 17px;
+  font-size: 15px;
   cursor: pointer;
   transition: background 0.15s;
+  font-weight: 600;
 }
 
 .pref-button:hover { background: var(--surface-soft); }
@@ -530,36 +551,40 @@ h2 {
   border-color: var(--primary-text);
   background: var(--primary);
   color: #fff;
-  box-shadow: 0 3px 0 var(--primary-text);
+  box-shadow: 0 2px 0 var(--primary-text);
+  font-weight: 700;
 }
 
 .lock-message {
   margin-bottom: 20px;
   padding: 18px;
-  border: 3px dashed var(--rose);
+  border: 2px dashed var(--rose);
   border-radius: var(--radius-md);
   background: var(--rose-light);
   color: var(--rose-text);
-  font-size: 19px;
+  font-size: 16px;
   text-align: center;
+  font-weight: 700;
 }
 
 .ai-notice {
   margin-bottom: 14px;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 14px;
   text-align: center;
+  font-weight: 600;
 }
 
 .ai-badge {
   align-self: flex-start;
   margin-bottom: 10px;
   padding: 3px 10px;
-  border: 2px solid #ab47bc;
+  border: 1.5px solid #ab47bc;
   border-radius: var(--radius-pill);
   background: #f3e5f5;
   color: #7b1fa2;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .shuffle-button {
@@ -570,20 +595,21 @@ h2 {
   margin: 18px auto 0;
   height: 48px;
   padding: 0 24px;
-  border: 3px solid var(--primary);
+  border: 2px solid var(--primary);
   border-radius: var(--radius-pill);
   background: #fff;
   color: var(--primary-text);
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 4px 0 var(--primary-light);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.15s;
+  font-weight: 700;
 }
 
 .shuffle-button:hover { transform: translateY(-2px); }
 .shuffle-button:active { transform: translateY(2px); box-shadow: none; }
 .shuffle-button svg { width: 20px; height: 20px; }
-.shuffle-button small { color: var(--subtle); font-size: 14px; }
+.shuffle-button small { color: var(--subtle); font-size: 13px; font-weight: 600; }
 .shuffle-button[hidden] { display: none; }
 
 /* --- Custom (직접 입력) --- */
@@ -592,7 +618,7 @@ h2 {
   flex-direction: column;
   gap: 16px;
   padding: 28px;
-  border: var(--border-thick) dashed #ab47bc;
+  border: 2px dashed #ab47bc;
   border-radius: var(--radius-lg);
   background: #fdf7fe;
 }
@@ -606,7 +632,8 @@ h2 {
 .custom-help {
   margin-top: 6px;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .custom-form {
@@ -617,12 +644,13 @@ h2 {
 .custom-form input {
   flex: 1;
   min-width: 0;
-  height: 56px;
+  height: 52px;
   padding: 0 20px;
-  border: 3px solid #ce93d8;
+  border: 2px solid #ce93d8;
   border-radius: var(--radius-pill);
   background: #fff;
-  font-size: 19px;
+  font-size: 17px;
+  font-weight: 500;
 }
 
 .custom-form input:focus { border-color: #ab47bc; }
@@ -632,16 +660,17 @@ h2 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 56px;
+  height: 52px;
   padding: 0 22px;
-  border: 3px solid #7b1fa2;
+  border: 2px solid #7b1fa2;
   border-radius: var(--radius-pill);
   background: #ab47bc;
   color: #fff;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 4px 0 #7b1fa2;
+  box-shadow: 0 3px 0 #7b1fa2;
   transition: transform 0.1s, box-shadow 0.1s;
+  font-weight: 700;
 }
 
 .custom-button svg { width: 20px; height: 20px; }
@@ -653,8 +682,9 @@ h2 {
   border-radius: var(--radius-sm);
   background: #f3e5f5;
   color: #6a1b9a;
-  font-size: 17px;
+  font-size: 15px;
   text-align: center;
+  font-weight: 600;
 }
 
 .custom-message.error {
@@ -674,7 +704,7 @@ h2 {
   display: flex;
   flex-direction: column;
   padding: 24px;
-  border: 3px solid var(--subtle);
+  border: 2px solid var(--subtle);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
@@ -692,18 +722,20 @@ h2 {
 
 .recommendation h3 {
   margin-bottom: 10px;
-  font-size: 22px;
+  font-size: 19px;
   word-break: keep-all;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.35;
 }
 
 .recommendation p {
   flex: 1;
   margin-bottom: 18px;
   color: var(--muted);
-  font-family: "Gowun Dodum", sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.6;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.65;
   word-break: keep-all;
 }
 
@@ -715,11 +747,12 @@ h2 {
 
 .mini-tags span {
   padding: 4px 12px;
-  border: 2px solid var(--amber-light);
+  border: 1.5px solid var(--amber-light);
   border-radius: var(--radius-pill);
   background: var(--surface-soft);
   color: var(--amber-text);
-  font-size: 15px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -748,6 +781,7 @@ h2 {
   }
 
   .tag-row { justify-content: center; }
+  #balanceCopy { text-align: left; }
   .meal-list { grid-template-columns: 1fr; }
 }
 
@@ -755,14 +789,14 @@ h2 {
   .app-shell { gap: 18px; padding-top: 18px; }
   .topbar, .tool-panel, .teacher-card { padding: 20px; }
   .week-strip { padding: 16px; }
-  h1 { font-size: 32px; }
-  #balanceTitle { font-size: 21px; }
+  h1 { font-size: 30px; }
+  #balanceTitle { font-size: 19px; }
   .teacher-photo { width: 136px; height: 136px; }
 
   .week-tools { width: 100%; margin-left: 0; }
   .chip-button { flex: 1; }
   .day-list { gap: 6px; }
-  .day-button strong { font-size: 20px; }
+  .day-button strong { font-size: 19px; }
   .day-button.today .day-name::after { content: ""; }
 
   .preference-group { grid-template-columns: repeat(2, 1fr); }
