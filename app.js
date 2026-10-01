@@ -689,7 +689,7 @@ function renderRecommendations(items, target = elements.recommendations) {
     if (item.ai) {
       const source = document.createElement("span");
       source.className = "ai-badge";
-      source.textContent = "✨ 제미나이";
+      source.textContent = "✨ 지은쌤 추천";
       card.append(source);
     }
 
@@ -710,7 +710,7 @@ function recommendDinner() {
   renderRecommendations(items);
   elements.aiNotice.hidden = false;
   elements.aiNotice.textContent = items[0]?.ai
-    ? "✨ 오늘 점심을 보고 제미나이가 미리 골라 둔 메뉴예요."
+    ? "✨ 오늘 점심을 보고 지은쌤이 미리 골라 둔 메뉴예요."
     : "🍽️ 앱에 들어 있는 기본 메뉴 중에서 골랐어요.";
   elements.shuffleButton.hidden = pageCount < 2;
   elements.shufflePage.textContent = `${page + 1}/${pageCount}`;
@@ -736,7 +736,7 @@ async function askCustom(event) {
   const date = state.selectedDate || todayIso();
   elements.customButton.disabled = true;
   elements.customResults.replaceChildren();
-  showCustomMessage("제미나이가 열심히 고르는 중이에요… 🍳");
+  showCustomMessage("지은쌤이 열심히 고르는 중이에요… 🍳");
 
   try {
     const response = await fetch(`${AI_ENDPOINT}/custom`, {
