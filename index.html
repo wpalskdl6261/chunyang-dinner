@@ -6,9 +6,9 @@
     <title>점심 기반 저메추</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css" />
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
     <script src="./app.js" defer></script>
   </head>
   <body>
@@ -25,66 +25,71 @@
         </div>
       </header>
 
-      <section class="control-strip" aria-label="급식 조회">
-        <label class="date-field">
-          <span>📅 날짜</span>
-          <input id="mealDate" type="date" />
-        </label>
-        <button id="todayButton" class="icon-button secondary" type="button">
-          <i data-lucide="sun" aria-hidden="true"></i>
-          <span>오늘</span>
-        </button>
-        <button id="loadButton" class="icon-button primary" type="button">
-          <i data-lucide="utensils" aria-hidden="true"></i>
-          <span>메뉴 보기</span>
-        </button>
-      </section>
-
-      <section class="content-grid">
-        <article class="tool-panel lunch-panel" aria-labelledby="lunch-title">
-          <div class="panel-heading">
-            <div>
-              <p class="section-label">🍱 Lunch</p>
-              <h2 id="lunch-title">오늘 점심</h2>
-            </div>
-            <span id="sourceBadge" class="source-badge">나이스(NEIS)</span>
-          </div>
-
-          <div id="mealStatus" class="status-line" role="status">급식을 불러오는 중</div>
-          <ul id="mealList" class="meal-list" aria-label="점심 메뉴"></ul>
-
-          <div class="nutrition-row">
-            <div>
-              <span class="metric-label">열량</span>
-              <strong id="calories">-</strong>
-            </div>
-            <div>
-              <span class="metric-label">단백질</span>
-              <strong id="protein">-</strong>
-            </div>
-            <div>
-              <span class="metric-label">지방</span>
-              <strong id="fat">-</strong>
-            </div>
-          </div>
-        </article>
-
-        <article class="tool-panel note-panel" aria-labelledby="analysis-title">
-          <div class="panel-heading">
-            <div>
-              <p class="section-label">📝 Lunch Note</p>
-              <h2 id="analysis-title">점심 메모</h2>
-            </div>
-          </div>
-
-          <div class="note-copy" aria-live="polite">
-            <strong id="balanceTitle">메뉴를 기다리는 중</strong>
-            <p id="balanceCopy">점심 메뉴가 들어오면 저녁 추천을 준비할게요.</p>
-          </div>
-
+      <!-- 영양 선생님 인사 카드: 사진은 nutrition-teacher.png 로 넣으면 자동으로 보여요 -->
+      <section class="teacher-card" aria-labelledby="balanceTitle">
+        <div class="teacher-photo">
+          <img id="teacherPhoto" src="./nutrition-teacher.png" alt="춘양초 영양 선생님" />
+          <span class="teacher-fallback" aria-hidden="true">🧑‍🍳</span>
+        </div>
+        <div class="teacher-bubble" aria-live="polite">
+          <span class="teacher-name">👩‍🍳 영양 선생님의 한마디</span>
+          <strong id="balanceTitle">메뉴를 기다리는 중</strong>
+          <p id="balanceCopy">점심 메뉴가 들어오면 저녁 추천을 준비할게요.</p>
           <div id="analysisTags" class="tag-row" aria-label="점심 키워드"></div>
-        </article>
+        </div>
       </section>
+
+      <section class="week-strip" aria-label="날짜 고르기">
+        <div class="week-head">
+          <button id="prevWeek" class="round-button" type="button" aria-label="지난주">
+            <i data-lucide="chevron-left" aria-hidden="true"></i>
+          </button>
+          <strong id="weekLabel">이번 주</strong>
+          <button id="nextWeek" class="round-button" type="button" aria-label="다음 주">
+            <i data-lucide="chevron-right" aria-hidden="true"></i>
+          </button>
+          <div class="week-tools">
+            <button id="todayButton" class="chip-button" type="button">
+              <i data-lucide="sun" aria-hidden="true"></i>
+              <span>오늘</span>
+            </button>
+            <label class="date-chip">
+              <i data-lucide="calendar" aria-hidden="true"></i>
+              <span class="sr-only">날짜 직접 고르기</span>
+              <input id="mealDate" type="date" />
+            </label>
+          </div>
+        </div>
+        <div id="dayList" class="day-list"></div>
+      </section>
+
+      <article class="tool-panel lunch-panel" aria-labelledby="lunch-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-label">🍱 Lunch</p>
+            <h2 id="lunch-title">오늘 점심</h2>
+          </div>
+          <span id="sourceBadge" class="source-badge">나이스(NEIS)</span>
+        </div>
+
+        <div id="mealStatus" class="status-line" role="status">급식을 불러오는 중</div>
+        <ul id="mealList" class="meal-list" aria-label="점심 메뉴"></ul>
+
+        <div class="nutrition-row">
+          <div>
+            <span class="metric-label">🔥 열량</span>
+            <strong id="calories">-</strong>
+          </div>
+          <div>
+            <span class="metric-label">💪 단백질</span>
+            <strong id="protein">-</strong>
+          </div>
+          <div>
+            <span class="metric-label">🧈 지방</span>
+            <strong id="fat">-</strong>
+          </div>
+        </div>
+      </article>
 
       <section class="recommend-section" aria-labelledby="recommend-title">
         <div class="recommend-head">
@@ -101,7 +106,7 @@
           </div>
         </div>
 
-        <button id="recommendButton" class="icon-button recommend-button" type="button">
+        <button id="recommendButton" class="recommend-button" type="button">
           <i data-lucide="star" aria-hidden="true"></i>
           <span>맛있는 저녁 추천 받기!</span>
         </button>

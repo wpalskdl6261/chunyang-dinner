@@ -5,16 +5,26 @@ const SCHOOL = {
 };
 
 const DAILY_LIMIT = 2;
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const state = {
   meal: null,
   note: null,
   preference: "balanced",
+  selectedDate: null,
+  weekStart: null,
+  // 주 시작일(YYYY-MM-DD) → { "YYYYMMDD": NEIS row }
+  weekCache: new Map(),
 };
 
 const elements = {
   date: document.querySelector("#mealDate"),
   todayButton: document.querySelector("#todayButton"),
-  loadButton: document.querySelector("#loadButton"),
+  prevWeek: document.querySelector("#prevWeek"),
+  nextWeek: document.querySelector("#nextWeek"),
+  weekLabel: document.querySelector("#weekLabel"),
+  dayList: document.querySelector("#dayList"),
+  lunchTitle: document.querySelector("#lunch-title"),
+  teacherPhoto: document.querySelector("#teacherPhoto"),
   mealStatus: document.querySelector("#mealStatus"),
   mealList: document.querySelector("#mealList"),
   calories: document.querySelector("#calories"),
@@ -33,10 +43,10 @@ const elements = {
 const keywordSets = {
   fried: ["튀김", "돈까스", "치킨", "탕수", "강정", "프라이", "군만두"],
   spicy: ["매운", "고추", "마라", "짬뽕", "떡볶", "불닭", "닭갈비", "주꾸미", "제육"],
-  meat: ["닭", "돼지", "돈육", "소고기", "쇠고기", "베이컨", "삼계탕", "갈비", "햄", "소시지"],
+  meat: ["닭", "돼지", "돈육", "소고기", "쇠고기", "베이컨", "삼계탕", "갈비", "햄", "소시지", "소세지", "설렁탕", "곰탕"],
   chicken: ["닭", "치킨", "삼계탕"],
   pork: ["돼지", "돈육", "베이컨", "햄", "소시지"],
-  beef: ["소고기", "쇠고기", "한우", "불고기"],
+  beef: ["소고기", "쇠고기", "한우", "불고기", "설렁탕"],
   seafood: ["고등어", "오징어", "새우", "꽃게", "참치", "멸치", "조개", "연어", "생선"],
   sweet: ["케이크", "초코", "푸딩", "요거트", "아이스", "젤리", "주스", "과일", "사과", "배"],
   veggie: ["나물", "샐러드", "채소", "묵", "오이", "브로콜리", "양배추", "버섯", "시금치", "김치"],
@@ -117,6 +127,36 @@ function todayIso() {
 
 function dateToYmd(dateValue) {
   return dateValue.replaceAll("-", "");
+}
+
+function parseIso(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function toIso(date) {
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${m}-${d}`;
+}
+
+function addDays(iso, days) {
+  const date = parseIso(iso);
+  date.setDate(date.getDate() + days);
+  return toIso(date);
+}
+
+// 그 주의 월요일 (주말이면 다음 주 월요일)
+function schoolWeekStart(iso) {
+  const day = parseIso(iso).getDay();
+  if (day === 0) return addDays(iso, 1);
+  if (day === 6) return addDays(iso, 2);
+  return addDays(iso, 1 - day);
+}
+
+function dayLabel(iso) {
+  const date = parseIso(iso);
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`;
 }
 
 function usageKey() {
@@ -226,10 +266,10 @@ function describeMeal(meal) {
     // 너무 길어지지 않게 최대 2개 장점만 연결
     benefitText = benefits.slice(0, 2).join(" 그리고 ");
   } else {
-    benefitText = "영양 선생님이 골고루 챙겨주신 멋진 식단이라 쑥쑥 자라는 데 최고랍니다!";
+    benefitText = "선생님이 골고루 챙겨 준 식단이라 쑥쑥 자라는 데 최고랍니다!";
   }
 
-  const copy = `${benefitText} 정말 훌륭하죠? 겹치지 않게 맛있는 저녁을 골라줄게요!`;
+  const copy = `${benefitText} 저녁은 점심이랑 겹치지 않게 골라 볼까요?`;
 
   return {
     flags,
@@ -278,56 +318,124 @@ function resetMealUi() {
   elements.recommendations.replaceChildren();
 }
 
-async function loadMeal() {
-  const dateValue = elements.date.value || todayIso();
+// 월~금 급식을 한 번에 받아서 주 단위로 저장
+async function fetchWeek(weekStart) {
+  if (state.weekCache.has(weekStart)) return state.weekCache.get(weekStart);
+
   const params = new URLSearchParams({
     Type: "json",
     pIndex: "1",
     pSize: "10",
     ATPT_OFCDC_SC_CODE: SCHOOL.officeCode,
     SD_SCHUL_CODE: SCHOOL.schoolCode,
-    MLSV_YMD: dateToYmd(dateValue),
+    MLSV_FROM_YMD: dateToYmd(weekStart),
+    MLSV_TO_YMD: dateToYmd(addDays(weekStart, 4)),
     MMEAL_SC_CODE: "2",
   });
 
+  const response = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params}`);
+  if (!response.ok) throw new Error("network");
+  const data = await response.json();
+  const rows = data.mealServiceDietInfo?.[1]?.row || [];
+
+  const week = {};
+  rows.forEach((row) => {
+    week[row.MLSV_YMD] = row;
+  });
+  state.weekCache.set(weekStart, week);
+  return week;
+}
+
+function renderWeek() {
+  const week = state.weekCache.get(state.weekStart);
+  const today = todayIso();
+  const fragment = document.createDocumentFragment();
+
+  for (let i = 0; i < 5; i += 1) {
+    const iso = addDays(state.weekStart, i);
+    const date = parseIso(iso);
+    const hasMeal = Boolean(week?.[dateToYmd(iso)]);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "day-button";
+    button.classList.toggle("active", iso === state.selectedDate);
+    button.classList.toggle("today", iso === today);
+    button.classList.toggle("empty", Boolean(week) && !hasMeal);
+    button.dataset.date = iso;
+    button.innerHTML = `<span class="day-name">${WEEKDAYS[date.getDay()]}</span><strong>${date.getDate()}</strong><span class="day-dot">${
+      week ? (hasMeal ? "🍚" : "쉼") : "…"
+    }</span>`;
+    button.setAttribute("aria-label", `${dayLabel(iso)}${hasMeal ? "" : " 급식 없음"}`);
+    button.addEventListener("click", () => selectDate(iso));
+    fragment.append(button);
+  }
+
+  const start = parseIso(state.weekStart);
+  elements.weekLabel.textContent =
+    state.weekStart === schoolWeekStart(today) ? "이번 주" : `${start.getMonth() + 1}월 ${start.getDate()}일 주`;
+  elements.dayList.replaceChildren(fragment);
+}
+
+async function selectDate(iso) {
+  const weekStart = schoolWeekStart(iso);
+  // 주말을 고르면 다음 주 월요일로 넘어가요
+  const day = parseIso(iso).getDay();
+  const target = day === 0 || day === 6 ? weekStart : iso;
+
+  state.selectedDate = target;
+  state.weekStart = weekStart;
   state.meal = null;
   state.note = null;
+  elements.date.value = target;
+  elements.lunchTitle.textContent = target === todayIso() ? "오늘 점심" : `${dayLabel(target)} 점심`;
   resetMealUi();
-  setStatus("영양 선생님의 식단을 가져오는 중이에요! 🏃‍♂️");
-  elements.loadButton.disabled = true;
+  renderWeek();
   updateQuota();
 
+  if (!state.weekCache.has(weekStart)) {
+    setStatus("영양 선생님의 식단을 가져오는 중이에요! 🏃‍♂️");
+  }
+
+  let week;
   try {
-    const response = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params}`);
-    if (!response.ok) throw new Error("network");
-    const data = await response.json();
-    const row = data.mealServiceDietInfo?.[1]?.row?.[0];
-
-    if (!row) {
-      setStatus("앗! 이 날은 점심 정보가 없어요 😢", true);
-      return;
-    }
-
-    const meal = {
-      date: dateValue,
-      items: cleanDishText(row.DDISH_NM),
-      calories: row.CAL_INFO || "",
-      nutrition: parseNutrition(row.NTR_INFO),
-      raw: row,
-    };
-
-    state.meal = meal;
-    state.note = describeMeal(meal);
-    setStatus(`${SCHOOL.name} ${row.MMEAL_SC_NM} 완성! ✨`);
-    renderMeal(meal);
-    renderNote(state.note);
+    week = await fetchWeek(weekStart);
   } catch (error) {
     setStatus("인터넷 연결이 조금 불안한가 봐요 😭", true);
-  } finally {
-    elements.loadButton.disabled = false;
-    updateQuota();
-    if (window.lucide) window.lucide.createIcons();
+    return;
   }
+
+  // 기다리는 사이 다른 날짜를 눌렀으면 무시
+  if (state.selectedDate !== target) return;
+  renderWeek();
+
+  const row = week[dateToYmd(target)];
+  if (!row) {
+    setStatus(
+      target !== iso ? "주말이라 다음 주 월요일로 왔는데, 아직 식단이 안 올라왔어요 😢" : "앗! 이 날은 점심 정보가 없어요 😢",
+      true,
+    );
+    return;
+  }
+
+  const meal = {
+    date: target,
+    items: cleanDishText(row.DDISH_NM),
+    calories: row.CAL_INFO || "",
+    nutrition: parseNutrition(row.NTR_INFO),
+    raw: row,
+  };
+
+  state.meal = meal;
+  state.note = describeMeal(meal);
+  setStatus(
+    target !== iso
+      ? `주말이라 다음 주 월요일 점심을 보여줄게요! ✨`
+      : `${SCHOOL.name} ${row.MMEAL_SC_NM} 완성! ✨`,
+  );
+  renderMeal(meal);
+  renderNote(state.note);
+  updateQuota();
 }
 
 function recommendationRank(item, note) {
@@ -393,11 +501,12 @@ function recommendDinner() {
 }
 
 function bindEvents() {
-  elements.todayButton.addEventListener("click", () => {
-    elements.date.value = todayIso();
-    loadMeal();
+  elements.todayButton.addEventListener("click", () => selectDate(todayIso()));
+  elements.prevWeek.addEventListener("click", () => selectDate(addDays(state.weekStart, -7)));
+  elements.nextWeek.addEventListener("click", () => selectDate(addDays(state.weekStart, 7)));
+  elements.date.addEventListener("change", () => {
+    if (elements.date.value) selectDate(elements.date.value);
   });
-  elements.loadButton.addEventListener("click", loadMeal);
   elements.recommendButton.addEventListener("click", recommendDinner);
   elements.prefButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -409,13 +518,19 @@ function bindEvents() {
       }
     });
   });
+  // 선생님 사진이 없으면 이모지로 대신 보여줘요
+  elements.teacherPhoto.addEventListener("error", () => {
+    elements.teacherPhoto.closest(".teacher-photo").classList.add("no-photo");
+  });
+  if (elements.teacherPhoto.complete && !elements.teacherPhoto.naturalWidth) {
+    elements.teacherPhoto.closest(".teacher-photo").classList.add("no-photo");
+  }
 }
 
 function init() {
-  elements.date.value = todayIso();
   bindEvents();
   updateQuota();
-  loadMeal();
+  selectDate(todayIso());
   if (window.lucide) window.lucide.createIcons();
 }
 
